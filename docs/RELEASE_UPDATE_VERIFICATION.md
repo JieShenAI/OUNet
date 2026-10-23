@@ -17,7 +17,7 @@
 
 | 检查 | 结果 | 范围 |
 | --- | --- | --- |
-| Android JUnit / Robolectric | 170 项通过 | 原有 161 项，加 8 项更新查询与 1 项关于入口检查 |
+| Android JUnit / Robolectric | 154 项通过 | 原有 145 项，加 8 项更新查询与 1 项关于入口检查；按 JUnit XML 实际汇总 |
 | Android Lint | 无问题 | Debug 检查；Release 构建同时执行既有检查 |
 | Android 正式构建 | 通过 | 原证书、实际包身份/版本/minSdk、兼容包摘要核对 |
 | Windows 桌面测试 | 107 项通过 | 原有 94 项扩展，含分页、附件、跳转、冷却和联系入口 |
