@@ -33,7 +33,10 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 class GitHub:
-    def __init__(self,token):self.token=token;self.opener=urllib.request.build_opener(NoRedirect)
+    def __init__(self,token):
+        self.token=token
+        # Match the clients: never send publishing credentials through an ambient proxy.
+        self.opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect)
     def request(self,path,method='GET',data=None,content_type='application/json',anonymous=False,raw=False):
         url=path if path.startswith('https://') else API+path
         for _ in range(5):
@@ -81,6 +84,8 @@ def upload_draft(api,directory):
             release=next((r for r in items if r.get('tag_name')==tag),None)
             if release or len(items)<100:break
     if release is not None and not release['draft']:raise ValueError('Release already public; never replace published binaries')
+    if release is not None and release.get('target_commitish')!=sha:
+        raise ValueError('Existing draft targets another source commit; review it before resuming')
     notes=directory/('ANDROID_RELEASE_NOTES.md' if manifest['platform']=='android' else 'WINDOWS_RELEASE_NOTES.md')
     body=notes.read_text(encoding='utf-8')+'\n\n源码提交：`'+sha+'`。构建及未验收范围见同提交的 `docs/RELEASE_UPDATE_VERIFICATION.md`。\n'
     if release is None:
