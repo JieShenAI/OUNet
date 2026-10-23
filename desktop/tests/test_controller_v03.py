@@ -86,3 +86,17 @@ class ControllerV03(TempTest):
         for _ in range(3):self.controller.policy.failure('fixture')
         self.controller.refreshSession();self.controller.loadDevices(False);self.controller.checkUpdate()
         self.assertFalse(self.controller.busy);self.engine.assert_not_called()
+
+    def test_public_project_links_work_while_paused_and_report_handler_failure(self):
+        for _ in range(3):self.controller.policy.failure('fixture')
+        notices=[];self.controller.notice.connect(notices.append)
+        with patch('ouc_desktop.controller.QDesktopServices.openUrl',return_value=False) as opener:
+            self.controller.openProjectLink('email');self.controller.openProjectLink('source');self.controller.openProjectLink('releases')
+            self.assertEqual(opener.call_count,3)
+            self.assertEqual(opener.call_args.args[0].toString(),'https://github.com/JieShenAI/OUNet/releases')
+        self.assertTrue(self.controller.blocked);self.assertTrue(any('复制邮箱' in n for n in notices))
+
+    def test_update_check_is_coalesced_and_cooled_down(self):
+        with patch('ouc_desktop.update.check_update',return_value={'state':'empty','message':'fixture'}) as checker:
+            self.controller.checkUpdate();self.controller.checkUpdate();self.wait()
+            self.controller.checkUpdate();self.assertEqual(checker.call_count,1)

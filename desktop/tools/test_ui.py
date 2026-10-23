@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+from unittest.mock import patch
 os.environ["QT_QPA_PLATFORM"]="offscreen"
 os.environ["QT_QUICK_BACKEND"]="software"
 ROOT=Path(__file__).resolve().parents[1]
@@ -91,6 +92,16 @@ def main():
         assert any(obj.property('position')>.99 for obj in drawers),'Device drawer did not become visibly open'
         # Closing on route change keeps four primary pages and no history navigation.
         invoke(window,"go","help")
+        assert find("authorEmail").property('text')=='shencv@163.com'
+        assert find("projectUrl").property('text')=='https://github.com/JieShenAI/OUNet'
+        QMetaObject.invokeMethod(find('copyEmailButton'),'clicked');settle()
+        assert app.clipboard().text()=='shencv@163.com'
+        with patch('ouc_desktop.controller.QDesktopServices.openUrl',return_value=False) as opener:
+            QMetaObject.invokeMethod(find('sendEmailButton'),'clicked');settle()
+            assert opener.call_args.args[0].scheme()=='mailto'
+            QMetaObject.invokeMethod(find('openReleasesButton'),'clicked');settle()
+            assert opener.call_args.args[0].toString()=='https://github.com/JieShenAI/OUNet/releases'
+        window.setHeight(1600);capture('help-contact-and-source');window.setHeight(820);settle()
         backend._log('info','first synthetic record');backend._log('warning','latest synthetic record')
         invoke(window,"openDetails","diagnostics")
         entries=window.property('logEntries')

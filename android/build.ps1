@@ -24,22 +24,7 @@ $sdkProperty = $sdk.Replace('\', '/')
 Set-Content -LiteralPath 'local.properties' -Encoding ASCII -Value "sdk.dir=$sdkProperty"
 
 if (-not $DebugBuild -and -not (Test-Path -LiteralPath 'keystore.properties')) {
-    New-Item -ItemType Directory -Force -Path '.signing' | Out-Null
-    if (Test-Path -LiteralPath '.signing\release.jks') { throw 'Signing key already exists. Restore keystore.properties; do not replace the key.' }
-    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-    $bytes = New-Object byte[] 32
-    $rng.GetBytes($bytes)
-    $env:OUC_SIGNING_PASSWORD = [Convert]::ToBase64String($bytes)
-    try {
-        & (Join-Path $env:JAVA_HOME 'bin\keytool.exe') -genkeypair -keystore '.signing\release.jks' -storetype PKCS12 -alias ouc-release -keyalg RSA -keysize 3072 -validity 10000 -dname 'CN=OUC Network Helper,OU=Personal Tools,O=Personal,C=CN' -storepass:env OUC_SIGNING_PASSWORD -keypass:env OUC_SIGNING_PASSWORD -noprompt
-        if ($LASTEXITCODE -ne 0) { throw 'Signing key generation failed.' }
-        # Properties escaping preserves generated passwords exactly.
-        $escaped = $env:OUC_SIGNING_PASSWORD.Replace('\','\\').Replace('=','\=').Replace(':','\:')
-        Set-Content -LiteralPath 'keystore.properties' -Encoding ASCII -Value @(
-            'storeFile=.signing/release.jks', "storePassword=$escaped", 'keyAlias=ouc-release', "keyPassword=$escaped"
-        )
-    } finally { Remove-Item Env:OUC_SIGNING_PASSWORD -ErrorAction SilentlyContinue; $rng.Dispose() }
-    Write-Host 'Generated a local release key. Back up .signing and keystore.properties privately before future updates.'
+    throw 'Restore the existing release signing configuration; release builds never generate a replacement key.'
 }
 
 $tasks = @()
@@ -61,7 +46,11 @@ Copy-Item -LiteralPath $apk -Destination $destination -Force
 $hash = (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash.ToLowerInvariant()
 Set-Content -LiteralPath "$destination.sha256" -Encoding ASCII -Value "$hash  $([System.IO.Path]::GetFileName($destination))"
 if ($variant -eq 'release') {
-    & python (Join-Path $PSScriptRoot 'release_metadata.py') --apk $destination --apk-info (Join-Path $PSScriptRoot 'app\build\outputs\apk\release\output-metadata.json') --apksigner (Join-Path $sdk 'build-tools\35.0.0\apksigner.bat') --notes (Join-Path $PSScriptRoot '..\docs\ANDROID_V1_3_4_RELEASE_NOTES.md')
+    & python (Join-Path $PSScriptRoot 'release_metadata.py') --apk $destination --apk-info (Join-Path $PSScriptRoot 'app\build\outputs\apk\release\output-metadata.json') --apksigner (Join-Path $sdk 'build-tools\35.0.0\apksigner.bat') --notes (Join-Path $PSScriptRoot ('..\docs\ANDROID_V' + $artifactVersion.Replace('.','_') + '_RELEASE_NOTES.md'))
     if ($LASTEXITCODE -ne 0) { throw 'Public Android release metadata verification failed.' }
+    $bundleArguments = @((Join-Path $PSScriptRoot '..\tools\release_bundle.py'),'--platform','android','--version',$artifactVersion)
+    if (-not $SkipChecks) { $bundleArguments += '--checks-passed' }
+    & python @bundleArguments
+    if ($LASTEXITCODE -ne 0) { throw 'Android release bundle verification failed.' }
 }
 Write-Host "APK ready: $destination"

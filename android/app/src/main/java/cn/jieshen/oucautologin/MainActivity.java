@@ -54,7 +54,7 @@ public final class MainActivity extends Activity {
     private TextView logsText,logsHint;
     private ScrollView logsScroll;
     private long logsRevision=-1;
-    private Button connectButton;
+    private Button connectButton,updateDownload;
     private Button[] nav;
     private Spinner accounts;
     private Switch monitor;
@@ -75,6 +75,7 @@ public final class MainActivity extends Activity {
         refresh();
     };
     private final Runnable ticker=new Runnable(){public void run(){if(visible){refresh();handler.postDelayed(this,store.intervalMs());}}};
+    private final Runnable updateTicker=new Runnable(){public void run(){if(visible&&updateDialog!=null&&updateDialog.isShowing()){refreshUpdate();handler.postDelayed(this,500);}}};
 
     private final Runnable logsTicker=new Runnable(){public void run(){if(visible&&logsDialog!=null&&logsDialog.isShowing()){refreshLogs();handler.postDelayed(this,1000);}}};
 
@@ -169,7 +170,18 @@ public final class MainActivity extends Activity {
         LinearLayout tools=card(body);tools.addView(text("账号与系统",18,true));button(tools,"管理校园网账号",false,this::showAccounts);button(tools,"权限与品牌后台设置",false,this::showSettings);button(tools,"诊断记录",false,this::showLogs);
         button(tools,"重置失败保护",false,()->new AlertDialog.Builder(this).setTitle("允许重新尝试认证？").setMessage("清除明确认证失败记录。已取消固定认证冷却；点击首页重新检测并连接可同时重置并立即尝试。")
             .setPositiveButton("重置",(d,w)->{try{store.resetRetry();readOnly();}catch(Exception e){showError(e);}}).setNegativeButton("取消",null).show());
-        LinearLayout docs=card(body);docs.addView(text("使用文档",18,true));button(docs,"APP介绍",false,()->showDocument("APP介绍",R.raw.app_intro));button(docs,"数据使用说明",false,()->showDocument("数据使用说明",R.raw.data_usage));button(docs,"版权与第三方声明",false,()->showDocument("版权与第三方声明",R.raw.copyright_notice));button(docs,"检查更新",false,this::showUpdate);
+        LinearLayout docs=card(body);docs.addView(text("使用文档",18,true));button(docs,"APP介绍",false,()->showDocument("APP介绍",R.raw.app_intro));button(docs,"数据使用说明",false,()->showDocument("数据使用说明",R.raw.data_usage));button(docs,"版权与第三方声明",false,()->showDocument("版权与第三方声明",R.raw.copyright_notice));
+        LinearLayout project=card(body);project.addView(text(getString(R.string.about_ounet),18,true));
+        project.addView(secondary("当前版本："+BuildConfig.VERSION_NAME));
+        TextView email=secondary(getString(R.string.contact_author)+"："+ProjectLinks.EMAIL);email.setTextIsSelectable(true);project.addView(email);
+        button(project,getString(R.string.send_email),false,this::contactAuthor);
+        button(project,getString(R.string.copy_email),false,()->copyPublic(ProjectLinks.EMAIL));
+        TextView source=secondary("开源地址：\n"+ProjectLinks.REPOSITORY);source.setTextIsSelectable(true);project.addView(source);
+        button(project,getString(R.string.open_project),false,()->openWeb(ProjectLinks.REPOSITORY));
+        button(project,getString(R.string.copy_project),false,()->copyPublic(ProjectLinks.REPOSITORY));
+        button(project,"检查更新",false,this::showUpdate);
+        button(project,getString(R.string.open_releases),false,()->openWeb(ProjectLinks.RELEASES));
+        button(project,getString(R.string.copy_releases),false,()->copyPublic(ProjectLinks.RELEASES));
         TextView about=secondary("OUNet "+BuildConfig.VERSION_NAME+"\nOUNet 海浪连接标识 · 独立工具，非学校官方客户端\n密码通过本机Keystore加密保存。\n"+getString(R.string.free_notice));body.addView(about);
     }
     private void buildRecords(){
@@ -310,15 +322,27 @@ public final class MainActivity extends Activity {
             new AlertDialog.Builder(this).setTitle(title).setView(page).setPositiveButton("关闭",null).show();
         }catch(IOException e){showError(e);}
     }
-    private String updateMessage(){UpdateRepository.Value v=UpdateRepository.get();ReleaseMetadata release=v.release;return "当前版本："+BuildConfig.VERSION_NAME+"（"+BuildConfig.VERSION_CODE+"）\n\n"+v.message+(release==null?"":"\n\n发布版本："+release.name+"\n最低Android API："+release.minSdk+"\n"+release.notes)+"\n\n从GitHub下载正式APK后直接覆盖安装，无需先卸载。请保留原包名和签名。";}
+    private String updateMessage(){UpdateRepository.Value v=UpdateRepository.get();ReleaseMetadata release=v.release;return "当前版本："+BuildConfig.VERSION_NAME+"（"+BuildConfig.VERSION_CODE+"）\n\n"+v.message+(v.checkedAt>0?"\n检查时间："+time(v.checkedAt):"")+(release==null?"":"\n\n发布版本："+release.name+"\n最低Android API："+release.minSdk+"\nSHA-256："+release.sha256+"\n"+release.notes)+"\n\n来源：GitHub · JieShenAI/OUNet\n从GitHub下载正式APK后直接覆盖安装，无需先卸载。请保留原包名和签名。SHA-256 为发布文件摘要，安装由系统确认。";}
+    private void refreshUpdate(){
+        if(updateText!=null)updateText.setText(updateMessage());
+        if(updateDownload!=null){UpdateRepository.Value v=UpdateRepository.get();updateDownload.setEnabled(!v.loading&&"available".equals(v.state));}
+    }
     private void showUpdate(){
         LinearLayout form=dialogContent();updateText=secondary(updateMessage());form.addView(updateText);
-        button(form,"重新检查版本",false,()->{UpdateRepository.request();updateText.setText(updateMessage());});
-        button(form,"前往新版下载",true,()->{UpdateRepository.Value v=UpdateRepository.get();ReleaseMetadata r=v.release;if(v.loading||r==null||r.code<=BuildConfig.VERSION_CODE){toast("尚未确认可更新的Android正式版本");return;}if(Build.VERSION.SDK_INT<r.minSdk){toast("新版不支持当前Android版本");return;}openWeb(r.releaseUrl);});
-        button(form,"打开GitHub发布页",false,()->openWeb(ReleaseMetadata.REPO+"/releases"));
-        updateDialog=new AlertDialog.Builder(this).setTitle("检查更新").setView(scroll(form)).setNegativeButton("关闭",null).create();updateDialog.show();UpdateRepository.request();updateText.setText(updateMessage());
+        updateText.setTextIsSelectable(true);
+        button(form,"重新检查版本",false,()->{UpdateRepository.request();refreshUpdate();});
+        updateDownload=button(form,"前往新版下载",true,()->{UpdateRepository.Value v=UpdateRepository.get();ReleaseMetadata r=v.release;if(v.loading||!"available".equals(v.state)||r==null||r.code<=BuildConfig.VERSION_CODE){toast("尚未确认可更新的Android正式版本");return;}if(Build.VERSION.SDK_INT<r.minSdk){toast("新版不支持当前Android版本");return;}openWeb(r.releaseUrl);});
+        button(form,"打开GitHub发布页",false,()->openWeb(ProjectLinks.RELEASES));
+        button(form,getString(R.string.copy_releases),false,()->copyPublic(ProjectLinks.RELEASES));
+        updateDialog=new AlertDialog.Builder(this).setTitle("检查更新").setView(scroll(form)).setNegativeButton("关闭",null).create();
+        updateDialog.setOnDismissListener(d->handler.removeCallbacks(updateTicker));updateDialog.show();UpdateRepository.request();refreshUpdate();handler.removeCallbacks(updateTicker);handler.post(updateTicker);
     }
-    private void openWeb(String url){try{startActivity(new Intent(Intent.ACTION_VIEW,android.net.Uri.parse(url)));}catch(RuntimeException e){toast("没有可用浏览器，请稍后从GitHub发布页下载");}}
+    private void copyPublic(String value){
+        android.content.ClipboardManager clipboard=(android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+        if(clipboard!=null){clipboard.setPrimaryClip(android.content.ClipData.newPlainText("OUNet",value));toast(getString(R.string.copied));}
+    }
+    private void contactAuthor(){try{startActivity(ProjectLinks.contactIntent());}catch(RuntimeException e){toast(getString(R.string.email_unavailable));}}
+    private void openWeb(String url){try{startActivity(new Intent(Intent.ACTION_VIEW,android.net.Uri.parse(url)));}catch(RuntimeException e){toast(getString(R.string.browser_unavailable));}}
     @Override public void onBackPressed(){if(tab==3){navigate(0);return;}super.onBackPressed();}
     private void showSettings(){
         LinearLayout form=dialogContent();permissionText=text(DeviceSettingsGuide.permissions(this),13,false);form.addView(permissionText);
@@ -363,14 +387,14 @@ public final class MainActivity extends Activity {
     private void showError(Exception e){toast(e instanceof IOException||e instanceof IllegalArgumentException?e.getMessage():"操作失败，请检查系统存储与权限");refresh();}
     private void toast(String value){Toast.makeText(this,value,Toast.LENGTH_LONG).show();}
     @Override protected void onResume(){
-        super.onResume();visible=true;CheckCoordinator.foreground(true);handler.post(ticker);handler.removeCallbacks(logsTicker);if(logsDialog!=null&&logsDialog.isShowing())handler.post(logsTicker);
+        super.onResume();visible=true;CheckCoordinator.foreground(true);handler.post(ticker);handler.removeCallbacks(logsTicker);if(logsDialog!=null&&logsDialog.isShowing())handler.post(logsTicker);handler.removeCallbacks(updateTicker);if(updateDialog!=null&&updateDialog.isShowing())handler.post(updateTicker);
         observer=new WifiAccess.Observer(this,()->handler.post(()->{if(visible){refresh();handler.removeCallbacks(networkEvent);handler.postDelayed(networkEvent,300);}}));
         handler.post(()->{if(visible){refresh();CheckCoordinator.request(this,RunGate.MANUAL,"启动连接",refreshed);}});
         if(store.enabled()&&!MonitorService.running)try{MonitorService.start(this);}catch(RuntimeException e){store.status("系统未允许恢复监测，请检查后台设置");}
 
     }
     @Override protected void onPause(){
-        visible=false;CheckCoordinator.foreground(false);handler.removeCallbacks(logsTicker);handler.removeCallbacks(ticker);handler.removeCallbacks(networkEvent);if(observer!=null){observer.close();observer=null;}if(!store.enabled())CheckCoordinator.cancel();super.onPause();
+        visible=false;CheckCoordinator.foreground(false);handler.removeCallbacks(updateTicker);handler.removeCallbacks(logsTicker);handler.removeCallbacks(ticker);handler.removeCallbacks(networkEvent);if(observer!=null){observer.close();observer=null;}if(!store.enabled())CheckCoordinator.cancel();super.onPause();
     }
     @Override protected void onSaveInstanceState(Bundle state){state.putInt("tab",tab);state.putString("interval_draft",interval!=null?interval.getText().toString():intervalDraft);super.onSaveInstanceState(state);}
     @Override protected void onDestroy(){handler.removeCallbacksAndMessages(null);if(observer!=null)observer.close();if(settingsDialog!=null)settingsDialog.dismiss();if(updateDialog!=null)updateDialog.dismiss();if(logsDialog!=null)logsDialog.dismiss();super.onDestroy();}

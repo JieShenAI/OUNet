@@ -19,9 +19,34 @@ ColumnLayout {
     }
     Panel {
         Layout.fillWidth:true
-        AppText {text:"了解 OUNet";font.pixelSize:16;font.bold:true}
+        AppText {text:"联系作者";font.pixelSize:16;font.bold:true}
+        CopyText {objectName:"authorEmail";text:page.v.authorEmail||"";Layout.fillWidth:true}
+        RowLayout {Layout.fillWidth:true
+            AppButton {objectName:"sendEmailButton";text:"发送邮件 ↗";quiet:true;onClicked:Backend.openProjectLink("email")}
+            AppButton {objectName:"copyEmailButton";text:"复制邮箱";quiet:true;onClicked:Backend.copyProjectInfo("email")}
+        }
+        AppText {text:"通过系统邮件应用联系作者；请勿发送校园网密码或未脱敏日志。";font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true}
+    }
+    Panel {
+        Layout.fillWidth:true
+        AppText {text:"开源项目";font.pixelSize:16;font.bold:true}
+        CopyText {objectName:"projectUrl";text:page.v.projectUrl||"";Layout.fillWidth:true}
+        RowLayout {Layout.fillWidth:true
+            AppButton {objectName:"openProjectButton";text:"打开项目 ↗";quiet:true;onClicked:Backend.openProjectLink("source")}
+            AppButton {objectName:"copyProjectButton";text:"复制地址";quiet:true;onClicked:Backend.copyProjectInfo("source")}
+        }
+    }
+    Panel {
+        Layout.fillWidth:true
+        AppText {text:"了解与更新 OUNet";font.pixelSize:16;font.bold:true}
         Repeater {model:[{key:"intro",title:"软件介绍"},{key:"privacy",title:"数据使用说明"},{key:"copyright",title:"版权与第三方许可"}];AppButton {required property var modelData;text:modelData.title+"  →";quiet:true;onClicked:page.detailsRequested(modelData.key)}}
         RowLayout {Layout.fillWidth:true;AppText {text:"当前版本 "+page.v.version;Layout.fillWidth:true} AppButton {objectName:"checkUpdateButton";text:"检查 Windows 更新";enabled:!page.v.busy&&!page.v.blocked;onClicked:{page.detailsRequested("update");Backend.checkUpdate()}}}
+        AppText {text:page.v.blocked?"网络请求已暂停，暂不能检查版本；仍可使用浏览器访问下载页。":"检查本平台最新正式版，下载后先退出托盘进程，再运行安装器覆盖升级。";font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true}
+        CopyText {text:page.v.releasesUrl||"";Layout.fillWidth:true;font.pixelSize:12}
+        RowLayout {Layout.fillWidth:true
+            AppButton {objectName:"openReleasesButton";text:"GitHub 下载页 ↗";quiet:true;onClicked:Backend.openProjectLink("releases")}
+            AppButton {text:"复制下载地址";quiet:true;onClicked:Backend.copyProjectInfo("releases")}
+        }
     }
     AppText {text:"免费软件，供学习交流与使用。\n项目自有代码采用 MIT 许可证。";horizontalAlignment:Text.AlignHCenter;font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true;Layout.topMargin:10}
 }

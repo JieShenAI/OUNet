@@ -4,7 +4,7 @@ import java.io.IOException;
 import org.json.JSONObject;
 
 final class ReleaseMetadata {
-    static final String REPO="https://github.com/JieShenAI/OUNet";
+    static final String REPO=ProjectLinks.REPOSITORY;
     static final String APP_ID="cn.jieshen.oucautologin";
     static final String CERT="6a5eedfcb02875007673e86772bc9da399e48e80f24dd88b85976126296fd91f";
     final int code,minSdk;final String name,notes,releaseUrl,apkUrl,sha256;

@@ -1,0 +1,131 @@
+name: Build and prepare OUNet Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build independently
+        type: choice
+        options: [android, windows]
+        required: true
+      version:
+        description: Exact version, e.g. 1.3.5 or 0.3.1
+        required: true
+        type: string
+      source_sha:
+        description: Full tested commit SHA on main
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.platform }}-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13.9'
+      - name: Validate frozen source and version
+        shell: pwsh
+        env:
+          RELEASE_PLATFORM: ${{ inputs.platform }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_SHA: ${{ inputs.source_sha }}
+        run: python tools/ci_preflight.py
+      - uses: actions/setup-java@v4
+        if: inputs.platform == 'android'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        if: inputs.platform == 'android'
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - name: Android SDK
+        if: inputs.platform == 'android'
+        shell: pwsh
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Existing Android release key
+        if: inputs.platform == 'android'
+        env:
+          OUC_KEYSTORE_BASE64: ${{ secrets.OUC_KEYSTORE_BASE64 }}
+          OUC_STORE_PASSWORD: ${{ secrets.OUC_STORE_PASSWORD }}
+          OUC_KEY_ALIAS: ${{ secrets.OUC_KEY_ALIAS }}
+          OUC_KEY_PASSWORD: ${{ secrets.OUC_KEY_PASSWORD }}
+        run: python tools/ci_signing.py
+      - name: Build Android with tests and signature verification
+        if: inputs.platform == 'android'
+        shell: pwsh
+        run: ./android/build.ps1
+      - name: Windows build environment
+        if: inputs.platform == 'windows'
+        shell: pwsh
+        run: |
+          python -m venv desktop/.venv
+          desktop/.venv/Scripts/python.exe -m pip install -r desktop/requirements.lock.txt
+          New-Item -ItemType Directory -Force desktop/.toolchain | Out-Null
+          $innoInstaller = Join-Path $env:GITHUB_WORKSPACE 'desktop/.toolchain/innosetup-6.7.3.exe'
+          Invoke-WebRequest 'https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe' -OutFile $innoInstaller
+          if ((Get-FileHash -LiteralPath $innoInstaller -Algorithm SHA256).Hash.ToLowerInvariant() -ne '9c73c3bae7ed48d44112a0f48e66742c00090bdb5bef71d9d3c056c66e97b732') { throw 'Inno Setup installer digest mismatch.' }
+          $innoRoot = Join-Path $env:GITHUB_WORKSPACE 'desktop/.toolchain/inno'
+          $compilerInstall = Start-Process -FilePath $innoInstaller -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CURRENTUSER',('/DIR="' + $innoRoot + '"')) -WindowStyle Hidden -Wait -PassThru
+          if ($compilerInstall.ExitCode -ne 0) { throw 'Cannot install pinned Inno Setup 6.7.3.' }
+      - name: Build Windows with QML and frozen runtime checks
+        if: inputs.platform == 'windows'
+        shell: pwsh
+        run: ./desktop/build.ps1
+      - name: Validate exact release bundle
+        env:
+          RELEASE_PLATFORM: ${{ inputs.platform }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        shell: pwsh
+        run: python tools/release_bundle.py --verify "dist/releases/${env:RELEASE_PLATFORM}-v${env:RELEASE_VERSION}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-bundle
+          path: dist/releases/${{ inputs.platform }}-v${{ inputs.version }}/*
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove temporary signing material
+        if: always() && inputs.platform == 'android'
+        shell: pwsh
+        run: |
+          $signingRoot = [IO.Path]::GetFullPath((Join-Path $env:GITHUB_WORKSPACE 'android/.signing'))
+          if (-not $signingRoot.StartsWith([IO.Path]::GetFullPath($env:GITHUB_WORKSPACE) + [IO.Path]::DirectorySeparatorChar)) { throw 'Unsafe signing path.' }
+          Remove-Item -LiteralPath (Join-Path $signingRoot 'release.jks') -ErrorAction SilentlyContinue
+          Remove-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'android/keystore.properties') -ErrorAction SilentlyContinue
+  draft:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-bundle
+          path: release-bundle
+      - name: Create draft and verify uploaded bytes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python tools/publish_release.py --bundle release-bundle
+      - name: Publication instructions
+        run: echo 'Draft only. Complete upgrade review, then use publish_release.py --publish with an exact source review report. See docs/RELEASING.md.'

@@ -4,8 +4,9 @@ from dataclasses import replace
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 import threading
+import time
 from PySide6.QtCore import QObject, Property, Signal, Slot, QTimer, QRunnable, QThreadPool, QUrl, Qt
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QDesktopServices, QGuiApplication
 from PySide6.QtWidgets import QFileDialog
 import auto_login as core
 from .engine import MonitorEngine, CheckResult
@@ -17,6 +18,7 @@ from .storage import Settings, CredentialStore, EventStore, SnapshotStore, Stora
 from .windows import WifiAdapter, StartupManager, WindowsError, legacy_tasks, boot_session, high_contrast
 from .migration import import_config, complete_migration
 from . import __version__
+from .project_info import AUTHOR_EMAIL, PROJECT_URL, RELEASES_URL, contact_url
 
 
 class WorkerSignals(QObject):
@@ -71,6 +73,7 @@ class Controller(QObject):
         self.pending_outage_key = ""
         self.last_check, self.last_duration = "尚未检查", 0.0
         self.session, self.devices, self.update_info = {}, {}, {}
+        self.last_update_check = None
         self.policy = self.recoveries = None
         self.timer = QTimer(self); self.timer.setSingleShot(True); self.timer.timeout.connect(self.check)
         self.debounce = QTimer(self); self.debounce.setSingleShot(True); self.debounce.setInterval(250)
@@ -140,7 +143,7 @@ class Controller(QObject):
         stale = self.session.get("availability") != "ready" or self.session.get("network_key") != self.network_key or self.online is not True or self.blocked
         policy_state = self.policy.state if self.policy else {}
         accounts = [dict(a, error=self.policy.credential_error(a["id"], a.get("revision", "legacy"))) for a in self.accounts] if self.policy else self.accounts
-        return {"version":__version__,"status":self.status,"title":titles.get(self.status,"连接概览"),"message":self.message,
+        return {"version":__version__,"authorEmail":AUTHOR_EMAIL,"projectUrl":PROJECT_URL,"releasesUrl":RELEASES_URL,"status":self.status,"title":titles.get(self.status,"连接概览"),"message":self.message,
                 "busy":self.busy,"configured":self.settings.configured,"monitor":self.settings.monitor,
                 "blocked":self.blocked,"failures":self.failures,"legacyPause":policy_state.get("legacy_pause",False),
                 "pauseMessage":self._pause_message() if self.blocked else "", "lastFailureAt":policy_state.get("last_failure_at",""),
@@ -483,12 +486,22 @@ class Controller(QObject):
     @Slot()
     def checkUpdate(self):
         if self.busy:return
-        if self.blocked:self.notice.emit(self._pause_message());return
+        if self.blocked:
+            self.update_info={"state":"paused","message":self._pause_message()+" 本次未检查更新，可打开 GitHub 下载页。"}
+            self.changed.emit();self.notice.emit(self._pause_message());return
         if self.demo:self.update_info={"message":"演示模式不检查远程版本。"};self.changed.emit();return
+        now=time.monotonic()
+        if self.last_update_check is not None and now-self.last_update_check<60:
+            self.notice.emit(f"请在 {max(1,int(60-(now-self.last_update_check)))} 秒后重新检查。")
+            return
+        self.last_update_check=now
         from .update import check_update
-        self.active_intent="update";self.update_info={"message":"正在检查 Windows 正式版本…"}
+        self.active_intent="update";self.update_info={"state":"loading","message":"正在检查 Windows 正式版本…"}
         def work(progress):
-            with core.create_session() as session:return check_update(RequestClient(session,self.policy,cancel=self.cancel))
+            try:
+                with core.create_session() as session:return check_update(RequestClient(session,self.policy,cancel=self.cancel))
+            except (RequestFailure,RequestsPaused) as error:
+                return {"state":"error","message":str(error)+" 可打开 GitHub 下载页。","checkedAt":now_text()}
         def done(value):self.update_info=value
         self._submit(work,done)
 
@@ -498,8 +511,23 @@ class Controller(QObject):
         if self.blocked:self.notice.emit(self._pause_message());return
         try:
             value=validate_metadata(dict(self.update_info,platform="windows-x64"))
-            if value["newer"]:QDesktopServices.openUrl(QUrl(value["url"]))
+            if value["newer"] and not QDesktopServices.openUrl(QUrl(value["url"])):
+                self.notice.emit("未能打开浏览器，可从 GitHub 下载页获取安装包。")
         except ValueError:self.notice.emit("尚无可验证的 Windows 下载地址，请先检查更新。")
+
+    @Slot(str)
+    def openProjectLink(self, name):
+        targets={"source":PROJECT_URL,"releases":RELEASES_URL,"email":contact_url(__version__)}
+        if name not in targets:return
+        if not QDesktopServices.openUrl(QUrl(targets[name])):
+            self.notice.emit("未能打开邮件应用，可复制邮箱后联系作者。" if name=="email" else "未能打开浏览器，可复制地址后访问。")
+
+    @Slot(str)
+    def copyProjectInfo(self, name):
+        values={"email":AUTHOR_EMAIL,"source":PROJECT_URL,"releases":RELEASES_URL}
+        if name not in values:return
+        clipboard=QGuiApplication.clipboard()
+        if clipboard is not None:clipboard.setText(values[name]);self.notice.emit("已复制。")
 
     @Slot()
     def importLegacy(self):

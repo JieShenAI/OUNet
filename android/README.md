@@ -1,6 +1,8 @@
-# OUNet Android 1.3.4
+# OUNet Android 1.3.5
 
-应用名称与启动图标已统一为 **OUNet**，当前源码版本为 1.3.4。新构建主包为 `dist/OUNet-1.3.4-release.apk`；同时保留原文件名兼容包供旧版更新入口使用。素材、导出方式和兼容说明见 [OUNet 品牌素材](../design/ounet/README.md)。
+应用名称与启动图标已统一为 **OUNet**，当前源码版本为 1.3.5。新构建主包为 `dist/OUNet-1.3.5-release.apk`；同时保留原文件名兼容包供旧版更新入口使用。素材、导出方式和兼容说明见 [OUNet 品牌素材](../design/ounet/README.md)。
+
+1.3.5 新增联系作者、开源地址和 GitHub 下载入口，并完善手动更新检查。[发布说明](../docs/ANDROID_V1_3_5_RELEASE_NOTES.md) · [实施与待验收范围](../docs/RELEASE_UPDATE_VERIFICATION.md) · [发布手册](../docs/RELEASING.md)。
 
 原生Java应用，Android 9起可用。包名与原正式签名保持，源码位于app/src/main。自有代码采用 [MIT 许可证](../LICENSE)，第三方组件与素材保留各自许可。
 
@@ -21,7 +23,7 @@
 - [历史1.3.1修复记录](../docs/ANDROID_V1_3_1_FIX_VERIFICATION.md)
 - [1.3实施、测试与未验收项](../docs/ANDROID_V1_3_IMPLEMENTATION.md)
 - [1.3设计与规划](../docs/ANDROID_V1_3_DESIGN_PLAN.md)及[设计示意](../design/android/v1.3-overview.svg)
-- [正式试装APK](dist/OUNet-1.3.4-release.apk)及[SHA-256](dist/OUNet-1.3.4-release.apk.sha256)
+- [正式试装APK](dist/OUNet-1.3.5-release.apk)及[SHA-256](dist/OUNet-1.3.5-release.apk.sha256)
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File android/build.ps1
@@ -29,6 +31,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File android/build.ps1
 
 脚本执行测试、Lint、release打包，核验原签名并生成dist/android-update.json和发布说明。密钥、口令与本机构建缓存均不提交仓库。构建不会自动发布GitHub Release。
 
-发布时采用android-v1.3.4标签，将同一构建的正式APK、校验文件与android-update.json上传Release。旧版安装器使用兼容文件名 `ouc-autologin-1.3.4-release.apk`，发布时也需上传兼容APK和校验文件。现有用户下载后确认覆盖安装，无需先卸载；1.3起支持设置内检查Android发布并前往浏览器下载。源码提交本身不会更新手机软件。
+发布时采用android-v1.3.5标签，将同一构建的正式APK、校验文件与android-update.json上传Release。旧版安装器使用兼容文件名 `ouc-autologin-1.3.5-release.apk`，发布时也需上传兼容APK和校验文件。现有用户下载后确认覆盖安装，无需先卸载；1.3起支持设置内检查Android发布并前往浏览器下载。源码提交本身不会更新手机软件。
 
 小米/iQOO/vivo/OPPO后台、真实校园认证与真实覆盖安装仍需逐机验收；本地自动测试不等于真机通过。
