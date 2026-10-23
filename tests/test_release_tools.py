@@ -9,7 +9,7 @@ from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
 import release_bundle as bundle
-from publish_release import upload_draft
+from publish_release import upload_draft, release_edit
 
 
 class ReleaseBundleTests(unittest.TestCase):
@@ -56,6 +56,14 @@ class ReleaseBundleTests(unittest.TestCase):
                 if path.startswith('/commits/'):return {'sha':'a'*40}
                 return {'object':{'type':'commit','sha':'b'*40}}
         with self.assertRaisesRegex(ValueError,'another source'):upload_draft(WrongTag(),target)
+
+    def test_every_draft_edit_preserves_uncreated_tag_and_frozen_commit(self):
+        manifest={'tag':'windows-v0.3.1','sourceCommit':'a'*40}
+        for changes in ({'body':'updated notes'},{'draft':False,'make_latest':'false'},{'prerelease':True}):
+            result=release_edit(manifest,**changes)
+            self.assertEqual(result['tag_name'],manifest['tag'])
+            self.assertEqual(result['target_commitish'],manifest['sourceCommit'])
+            self.assertEqual({k:result[k] for k in changes},changes)
 
 
 if __name__=='__main__':unittest.main()

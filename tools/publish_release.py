@@ -18,6 +18,12 @@ REPOSITORY='JieShenAI/OUNet'
 API='https://api.github.com/repos/'+REPOSITORY
 
 
+def release_edit(manifest, **changes):
+    # GitHub can reset a draft's uncreated tag to its untagged placeholder
+    # when PATCH omits tag_name. Preserve both identity fields on every edit.
+    return dict(changes,tag_name=manifest['tag'],target_commitish=manifest['sourceCommit'])
+
+
 def credential():
     token=os.environ.get('GITHUB_TOKEN') or os.environ.get('GH_TOKEN')
     if token:return token
@@ -93,7 +99,7 @@ def upload_draft(api,directory):
                     'name':'OUNet '+('Android ' if manifest['platform']=='android' else 'Windows ')+manifest['version'],
                     'body':body,'draft':True,'prerelease':False,'make_latest':'false'})
     else:
-        release=api.request('/releases/'+str(release['id']),'PATCH',{'body':body})
+        release=api.request('/releases/'+str(release['id']),'PATCH',release_edit(manifest,body=body))
     release_id=release['id']
     names=[entry['name'] for entry in manifest['files']]+['release-manifest.json']
     existing=[]
@@ -128,7 +134,7 @@ def main():
                 or report.get('approvedForPublication') is not True):raise ValueError('Review report does not approve this exact source and platform')
     api=GitHub(credential());release,manifest=upload_draft(api,directory)
     if args.publish:
-        release=api.request('/releases/'+str(release['id']),'PATCH',{'draft':False,'make_latest':'false'})
+        release=api.request('/releases/'+str(release['id']),'PATCH',release_edit(manifest,draft=False,make_latest='false'))
         # Anonymous read-back and real downloads. A protocol/content failure withdraws the release.
         try:
             public=api.request('/releases/tags/'+manifest['tag'],anonymous=True)
@@ -138,7 +144,7 @@ def main():
                 content=api.request(url,anonymous=True,raw=True)
                 if content is None or hashlib.sha256(content).hexdigest()!=entry['sha256']:raise ValueError('Public download verification failed')
         except Exception:
-            api.request('/releases/'+str(release['id']),'PATCH',{'prerelease':True})
+            api.request('/releases/'+str(release['id']),'PATCH',release_edit(manifest,prerelease=True))
             raise
     result={'tag':manifest['tag'],'releaseId':release['id'],'draft':release['draft'],
             'url':release['html_url'],'sourceCommit':manifest['sourceCommit']}

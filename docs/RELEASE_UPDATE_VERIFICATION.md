@@ -21,11 +21,15 @@
 | Android Lint | 无问题 | Debug 检查；Release 构建同时执行既有检查 |
 | Android 正式构建 | 通过 | 原证书、实际包身份/版本/minSdk、兼容包摘要核对 |
 | Windows 桌面测试 | 107 项通过 | 原有 94 项扩展，含分页、附件、跳转、冷却和联系入口 |
-| CLI 与发布工具测试 | 46 项通过 | 原有 40 项，加 6 项发布资产/来源/篡改与草稿门禁检查 |
+| CLI 与发布工具测试 | 47 项通过 | 原有 40 项，加 7 项发布资产/来源/篡改、草稿门禁和标签保留检查 |
 | 真实 QML 交互 | 通过 | 合成数据、复制邮箱、系统邮件/下载页调用 mock，无真实发信 |
 | 冻结 EXE 独立运行 | 通过 | 移除开发 Python/Qt PATH，QML、DPAPI、TLS 和四页加载正常 |
 | Windows 旧数据兼容 | 通过 | 从 `e3fc48e` 的 0.3.0 代码创建模拟 DPAPI 账号、设置与暂停；新版读取正确且未改原文件 |
-| 工作流 YAML | 本地解析通过 | 解析不等于 GitHub runner 已执行，远程状态另行记录 |
+| CI 工作流 | 本地解析及 GitHub CI 通过 | CLI Python 3.10/3.13、Windows、Android 均通过；正式构建草稿 workflow 尚未远程运行 |
+
+安装包已基于提交 `bf0dba0bd0fb873b30d0e418f2aa8b3a027c493d` 构建并冻结；后续修复仅涉及草稿编辑工具与本记录，不更改已验证的应用代码。GitHub CI 记录：[源码基线检查](https://github.com/JieShenAI/OUNet/actions/runs/39972043535)。
+
+自动审批拒绝直接推送默认分支后，更新改为独立分支 `codex/contact-release-update` 和 [PR #1](https://github.com/JieShenAI/OUNet/pull/1)。远程 `main` 未改变；合并等待明确批准。平台 Release 维持草稿，附件通过授权读取验证，尚未宣称公开可下载。
 
 Windows 数据兼容测试使用临时目录和虚构账号，不改动真实数据、自启或系统网络。源码的精确提交、文件摘要、大小及自动检查标志记录于每个 Release 的 `release-manifest.json`。
 
