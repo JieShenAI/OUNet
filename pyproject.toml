@@ -1,0 +1,18 @@
+[project]
+name = "ounet"
+version = "0.3.0"
+description = "Ocean University of China campus network assistant"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = ["requests>=2.31.0,<3"]
+
+[project.urls]
+Homepage = "https://github.com/JieShenAI/OUNet"
+Issues = "https://github.com/JieShenAI/OUNet/issues"
+
+[dependency-groups]
+desktop = ["PySide6-Essentials==6.10.2", "requests==2.34.2", "PyInstaller==6.22.3"]
+
+[tool.uv]
+package = false

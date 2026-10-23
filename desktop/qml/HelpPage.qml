@@ -1,0 +1,27 @@
+import QtQuick
+import QtQuick.Layouts
+ColumnLayout {
+    id:page
+    required property var v
+    signal detailsRequested(string key)
+    spacing:18
+    Panel {
+        Layout.fillWidth:true
+        RowLayout {Layout.fillWidth:true;spacing:18;Image {source:"../assets/ounet-desktop.png";sourceSize.width:96;Layout.preferredWidth:64;Layout.preferredHeight:64;fillMode:Image.PreserveAspectFit} ColumnLayout {Layout.fillWidth:true;spacing:5;AppText {text:"OUNet";font.pixelSize:26;font.bold:true} AppText {text:"校园网络助手 · Windows "+page.v.version;Layout.fillWidth:true} AppText {text:"独立开发，非学校官方软件";font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true}}}
+    }
+    Panel {
+        Layout.fillWidth:true
+        AppText {text:"遇到问题";font.pixelSize:16;font.bold:true}
+        AppButton {objectName:"diagnosticsButton";text:"诊断记录 · 最新在前  →";quiet:true;onClicked:page.detailsRequested("diagnostics")}
+        AppText {text:"按来源与阶段查看本地记录；查看历史时保持位置。";font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true}
+        AppButton {text:"导出脱敏排障信息  →";quiet:true;enabled:!page.v.busy;onClicked:page.detailsRequested("export")}
+        AppButton {text:"打开本机数据目录  ↗";quiet:true;onClicked:Backend.openLocation("data")}
+    }
+    Panel {
+        Layout.fillWidth:true
+        AppText {text:"了解 OUNet";font.pixelSize:16;font.bold:true}
+        Repeater {model:[{key:"intro",title:"软件介绍"},{key:"privacy",title:"数据使用说明"},{key:"copyright",title:"版权与第三方许可"}];AppButton {required property var modelData;text:modelData.title+"  →";quiet:true;onClicked:page.detailsRequested(modelData.key)}}
+        RowLayout {Layout.fillWidth:true;AppText {text:"当前版本 "+page.v.version;Layout.fillWidth:true} AppButton {objectName:"checkUpdateButton";text:"检查 Windows 更新";enabled:!page.v.busy&&!page.v.blocked;onClicked:{page.detailsRequested("update");Backend.checkUpdate()}}}
+    }
+    AppText {text:"免费软件，供学习交流与使用。\n项目自有代码采用 MIT 许可证。";horizontalAlignment:Text.AlignHCenter;font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true;Layout.topMargin:10}
+}

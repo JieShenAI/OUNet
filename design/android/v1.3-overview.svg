@@ -1,0 +1,234 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1940" viewBox="0 0 1320 1940" role="img" aria-labelledby="title desc">
+  <title id="title">海大网络助手 1.3 界面规划：网络识别、在线设备、恢复记录与设置</title>
+  <desc id="desc">五屏布局示意，保留蓝白圆角卡片与原创双海浪。顶部仅显示实际 Wi-Fi 名称，不提供选择入口。包含非校园网、在线六字段、其他在线设备、恢复记录及 XHA 请求统计、设置说明。所有账号、地址、时间、次数均为虚构演示数据，并非真机画面。</desc>
+  <defs>
+    <style>
+      text { font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; fill: #17334d; }
+      .heading { font-size: 28px; font-weight: 700; }
+      .section { font-size: 18px; font-weight: 700; }
+      .body { font-size: 16px; }
+      .value { font-size: 15px; }
+      .small { font-size: 14px; }
+      .tiny { font-size: 12px; }
+      .muted { fill: #536d83; }
+      .blue { fill: #004098; }
+      .green { fill: #087b63; }
+      .red { fill: #b42318; }
+      .bold { font-weight: 700; }
+      .card { fill: #fff; stroke: #dce6ed; stroke-width: 1; }
+      .divider { stroke: #e5edf2; stroke-width: 1; }
+    </style>
+    <g id="wifi" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <path d="M0 6 Q10 -3 20 6 M4 11 Q10 5 16 11 M8 16 Q10 14 12 16"/>
+      <circle cx="10" cy="20" r="1.3" fill="currentColor" stroke="none"/>
+    </g>
+    <g id="wave" fill="none" stroke-linecap="round">
+      <path d="M0 9 C6 0 13 0 20 9 S33 18 40 9" stroke="#004098" stroke-width="3"/>
+      <path d="M0 18 C6 9 13 9 20 18 S33 27 40 18" stroke="#00a0e9" stroke-width="3"/>
+    </g>
+    <g id="phone">
+      <rect width="390" height="800" rx="30" fill="#fff" stroke="#bacbd8" stroke-width="2"/>
+      <rect x="8" y="8" width="374" height="784" rx="24" fill="#f5f8fb"/>
+      <text x="30" y="36" class="small bold">10:19</text>
+      <path d="M307 30 h4 m4 0 h4 m4 0 h4" stroke="#536d83" stroke-width="3" stroke-linecap="round"/>
+      <rect x="336" y="24" width="22" height="11" rx="3" fill="none" stroke="#536d83" stroke-width="1.5"/>
+      <rect x="339" y="27" width="15" height="5" rx="1" fill="#536d83"/>
+      <rect x="24" y="56" width="342" height="56" rx="14" fill="#edf4f9"/>
+      <use href="#wifi" x="41" y="70" color="#004098"/>
+      <use href="#wave" x="26" y="134"/>
+      <text x="78" y="148" class="body bold blue">海大网络助手</text>
+      <text x="78" y="171" class="small muted">校园网络辅助工具 · 独立开发</text>
+      <line x1="24" y1="747" x2="366" y2="747" class="divider"/>
+      <text x="195" y="767" text-anchor="middle" class="tiny muted">免费软件，仅用于学习交流</text>
+      <rect x="141" y="781" width="108" height="4" rx="2" fill="#9eb1c0"/>
+    </g>
+    <g id="nav-overview">
+      <text x="42" y="733" class="small blue bold">连接概览</text><text x="167" y="733" class="small muted">恢复记录</text><text x="306" y="733" class="small muted">设置</text>
+    </g>
+    <g id="nav-recovery">
+      <text x="42" y="733" class="small muted">连接概览</text><text x="167" y="733" class="small blue bold">恢复记录</text><text x="306" y="733" class="small muted">设置</text>
+    </g>
+    <g id="nav-settings">
+      <text x="42" y="733" class="small muted">连接概览</text><text x="167" y="733" class="small muted">恢复记录</text><text x="306" y="733" class="small blue bold">设置</text>
+    </g>
+  </defs>
+
+  <rect width="1320" height="1940" fill="#edf3f8"/>
+  <text x="30" y="48" class="heading">海大网络助手 · 下一版界面规划</text>
+  <text x="30" y="80" class="body muted">只读 Wi-Fi · 先识别校园网 · 设备信息可展开 · 请求负载看得见</text>
+  <text x="30" y="117" class="body bold">01  非校园网 · 清晰说明状态</text>
+  <text x="465" y="117" class="body bold">02  校园网在线 · 本机信息优先</text>
+  <text x="900" y="117" class="body bold">03  二级页面 · 其他在线设备</text>
+
+  <!-- 顶部 SSID 只有图标与真实名称，没有下拉箭头或选择入口。 -->
+  <g transform="translate(30 138)" data-screen="non-campus">
+    <use href="#phone"/>
+    <text x="78" y="91" class="body bold">Guest-WiFi</text>
+    <rect x="24" y="191" width="342" height="280" rx="18" class="card"/>
+    <text x="42" y="221" class="section">连接概览</text>
+    <line x1="42" y1="239" x2="348" y2="239" class="divider"/>
+    <circle cx="195" cy="284" r="32" fill="#fff1f0"/>
+    <circle cx="195" cy="284" r="23" fill="none" stroke="#b42318" stroke-width="4"/>
+    <path d="M179 268 L211 300" fill="none" stroke="#b42318" stroke-width="4" stroke-linecap="round"/>
+    <text x="195" y="349" text-anchor="middle" font-size="26" font-weight="700" class="red">非校园网</text>
+    <text x="195" y="383" text-anchor="middle" class="body muted">XHA 不可达</text>
+    <text x="195" y="418" text-anchor="middle" class="small muted">连接校园网络后将自动重新检测</text>
+    <text x="195" y="447" text-anchor="middle" class="small muted">当前不发送校园网登录请求</text>
+
+    <rect x="24" y="487" width="342" height="80" rx="18" class="card"/>
+    <text x="42" y="514" class="small muted">认证使用账号</text><text x="295" y="514" class="small blue">管理</text>
+    <text x="42" y="547" class="body bold">常用账号 · 20****01</text>
+    <rect x="24" y="583" width="342" height="64" rx="18" class="card"/>
+    <text x="42" y="610" class="body bold">自动监测</text><text x="42" y="632" class="small muted">检测节拍 1 秒 · 推荐</text>
+    <rect x="296" y="600" width="52" height="30" rx="15" fill="#004098"/><circle cx="333" cy="615" r="11" fill="#fff"/>
+    <rect x="24" y="663" width="342" height="44" rx="14" fill="#eaf3fa" stroke="#cddfeb"/>
+    <text x="42" y="691" class="small blue bold">本次启动已协助恢复 0 次</text><text x="304" y="691" class="small blue">查看</text>
+    <use href="#nav-overview"/>
+  </g>
+
+  <g transform="translate(465 138)" data-screen="online">
+    <use href="#phone"/>
+    <text x="78" y="91" class="body bold">OUC-WIFI</text>
+    <rect x="24" y="191" width="342" height="289" rx="18" class="card"/>
+    <text x="42" y="221" class="section">连接概览</text>
+    <rect x="265" y="204" width="82" height="28" rx="14" fill="#e3f4ee"/>
+    <circle cx="281" cy="218" r="4" fill="#087b63"/><text x="292" y="223" class="small green bold">已联网</text>
+    <line x1="42" y1="239" x2="348" y2="239" class="divider"/>
+    <text x="42" y="265" class="small muted">账号</text><text x="143" y="265" class="value bold">20****01</text>
+    <text x="42" y="293" class="small muted">上线时间</text><text x="143" y="293" class="value">10-23 10:18:42</text>
+    <text x="42" y="321" class="small muted">源 IP</text><text x="143" y="321" class="value">192.0.2.23</text>
+    <text x="42" y="349" class="small muted">源 IPv6</text><text x="143" y="349" class="value">2001:db8::23</text>
+    <text x="42" y="377" class="small muted">源 MAC</text><text x="143" y="377" class="value">02:00:00:00:00:23</text>
+    <text x="42" y="405" class="small muted">移动端标识</text><text x="143" y="405" class="value">移动端（1）· 示例</text>
+    <text x="42" y="434" class="tiny muted">来自 XHA · 10:19 更新</text><text x="314" y="434" class="small blue">刷新</text>
+    <line x1="42" y1="446" x2="348" y2="446" class="divider"/>
+    <text x="42" y="468" class="small blue bold">查看其他在线设备 →</text>
+
+    <rect x="24" y="496" width="342" height="80" rx="18" class="card"/>
+    <text x="42" y="523" class="small muted">认证使用账号</text><text x="295" y="523" class="small blue">管理</text>
+    <text x="42" y="555" class="body bold">常用账号 · 20****01</text>
+    <rect x="24" y="592" width="342" height="64" rx="18" class="card"/>
+    <text x="42" y="619" class="body bold">自动监测</text><text x="42" y="642" class="small muted">检测节拍 1 秒 · 推荐</text>
+    <rect x="296" y="609" width="52" height="30" rx="15" fill="#004098"/><circle cx="333" cy="624" r="11" fill="#fff"/>
+    <rect x="24" y="672" width="342" height="36" rx="12" fill="#eaf3fa" stroke="#cddfeb"/>
+    <text x="42" y="696" class="small blue bold">本次启动已协助恢复 2 次</text><text x="304" y="696" class="small blue">查看</text>
+    <use href="#nav-overview"/>
+  </g>
+
+  <g transform="translate(900 138)" data-screen="devices">
+    <use href="#phone"/>
+    <text x="78" y="91" class="body bold">OUC-WIFI</text>
+    <text x="26" y="216" class="body blue">‹ 返回</text><text x="123" y="216" class="section">在线设备</text>
+    <text x="26" y="242" class="small muted">XHA 返回 3 台 · 演示数据</text><text x="314" y="242" class="small blue">刷新</text>
+
+    <rect x="24" y="258" width="342" height="130" rx="18" class="card"/>
+    <text x="42" y="287" class="body bold">设备 1 · 移动端</text>
+    <rect x="282" y="269" width="66" height="24" rx="12" fill="#e3f4ee"/><text x="294" y="286" class="tiny green bold">本机</text>
+    <text x="42" y="314" class="small muted">20****01 · 192.0.2.23</text>
+    <text x="42" y="341" class="small muted">上线于 10-23 10:18:42</text>
+    <text x="42" y="371" class="small blue">展开 IPv6、MAC、移动端标识 ↓</text>
+
+    <rect x="24" y="404" width="342" height="130" rx="18" class="card"/>
+    <text x="42" y="433" class="body bold">设备 2 · PC 端</text>
+    <text x="42" y="460" class="small muted">20****01 · 192.0.2.58</text>
+    <text x="42" y="487" class="small muted">上线于 10-23 09:42:10</text>
+    <text x="42" y="517" class="small blue">展开 IPv6、MAC、移动端标识 ↓</text>
+
+    <rect x="24" y="550" width="342" height="130" rx="18" class="card"/>
+    <text x="42" y="579" class="body bold">设备 3 · 移动端</text>
+    <text x="42" y="606" class="small muted">20****01 · 192.0.2.91</text>
+    <text x="42" y="633" class="small muted">上线于 10-23 08:30:02</text>
+    <text x="42" y="663" class="small blue">展开 IPv6、MAC、移动端标识 ↓</text>
+    <text x="26" y="709" class="tiny muted">仅展示 XHA 返回的记录，不执行设备下线</text>
+    <use href="#nav-overview"/>
+  </g>
+
+  <text x="30" y="1000" class="body bold">04  恢复记录 · 校园网调用统计</text>
+  <text x="465" y="1000" class="body bold">05  设置 · 说明文档与更新</text>
+  <g transform="translate(30 1020)" data-screen="recovery">
+    <use href="#phone"/>
+    <text x="78" y="91" class="body bold">OUC-WIFI</text>
+    <text x="26" y="218" class="section">恢复记录</text><text x="282" y="218" class="small blue">本次启动</text>
+    <rect x="24" y="234" width="342" height="104" rx="18" fill="#eaf3fa" stroke="#cddfeb"/>
+    <text x="42" y="261" class="small blue">本次启动以来已协助恢复</text>
+    <text x="42" y="304" font-size="36" font-weight="700" class="blue">2<tspan font-size="18"> 次</tspan></text>
+    <text x="42" y="326" class="tiny muted">启动于 10-23 09:30 · 同一故障仅记一次</text>
+
+    <rect x="24" y="354" width="342" height="215" rx="18" class="card"/>
+    <line x1="49" y1="389" x2="49" y2="505" stroke="#d3e2eb" stroke-width="2"/>
+    <circle cx="49" cy="389" r="7" fill="#087b63"/>
+    <text x="68" y="394" class="body bold">10:18:42 · 已协助恢复</text>
+    <text x="68" y="422" class="small muted">认证成功 → 连通复检通过</text>
+    <text x="68" y="447" class="small muted">OUC-WIFI · 耗时 8 秒</text>
+    <line x1="68" y1="465" x2="348" y2="465" class="divider"/>
+    <circle cx="49" cy="495" r="7" fill="#087b63"/>
+    <text x="68" y="500" class="body bold">09:47:06 · 已协助恢复</text>
+    <text x="68" y="528" class="small muted">认证成功 → 连通复检通过</text>
+    <text x="68" y="553" class="small muted">OUC-WIFI · 耗时 6 秒</text>
+
+    <rect x="24" y="585" width="342" height="123" rx="18" class="card"/>
+    <text x="42" y="613" class="body bold">校园网调用</text><text x="275" y="613" class="tiny muted">XHA 请求</text>
+    <text x="42" y="650" font-size="28" font-weight="700" class="blue">38<tspan font-size="14"> 次</tspan></text>
+    <text x="214" y="650" font-size="28" font-weight="700" class="blue">6<tspan font-size="14"> 次</tspan></text>
+    <line x1="195" y1="630" x2="195" y2="681" class="divider"/>
+    <text x="42" y="674" class="small muted">本次启动累计</text><text x="214" y="674" class="small muted">最近 60 秒</text>
+    <text x="42" y="697" class="tiny muted">进程结束后清零 · 包括失败请求 · 数值为示例</text>
+    <use href="#nav-recovery"/>
+  </g>
+
+  <g transform="translate(465 1020)" data-screen="settings">
+    <use href="#phone"/>
+    <text x="78" y="91" class="body bold">OUC-WIFI</text>
+    <text x="26" y="218" class="section">设置</text>
+    <rect x="24" y="234" width="342" height="151" rx="18" class="card"/>
+    <text x="42" y="263" class="body bold">检测节拍</text><text x="267" y="263" class="small blue">1 秒 · 推荐</text>
+    <rect x="42" y="279" width="306" height="42" rx="10" fill="#f4f8fc" stroke="#c9dce9"/>
+    <text x="58" y="307" class="body bold">1</text><text x="318" y="307" class="body muted">秒</text>
+    <text x="42" y="345" class="small muted">最低 0.3 秒，允许输入小数</text>
+    <text x="42" y="369" class="tiny muted">实际请求按状态调度，避免持续高频访问 XHA</text>
+
+    <rect x="24" y="401" width="342" height="167" rx="18" class="card"/>
+    <text x="42" y="430" class="body bold">说明文档</text><text x="335" y="430" class="body blue">›</text>
+    <text x="42" y="456" class="small muted">APP 介绍 · 版权说明 · 数据使用说明</text>
+    <line x1="42" y1="472" x2="348" y2="472" class="divider"/>
+    <text x="42" y="497" class="small muted">JShen 保留所有权利</text>
+    <text x="42" y="524" class="small muted">账号与设置保存在用户本地</text>
+    <text x="42" y="550" class="small muted">本 APP 没有后台服务器</text>
+
+    <rect x="24" y="584" width="342" height="90" rx="18" class="card"/>
+    <text x="42" y="614" class="body bold">检查更新</text><text x="335" y="614" class="body blue">›</text>
+    <text x="42" y="641" class="small muted">GitHub Releases · 下载新版 APK</text>
+    <text x="42" y="662" class="tiny muted">展示版本与更新说明，由用户确认安装</text>
+    <text x="195" y="706" text-anchor="middle" class="tiny muted">源码与安装包的发布地址在开发阶段配置</text>
+    <use href="#nav-settings"/>
+  </g>
+
+  <!-- 版面说明不属于 APP 页面；不将演示画面当作已交付功能。 -->
+  <g transform="translate(900 1020)">
+    <rect width="390" height="800" rx="24" fill="#e5eef6" stroke="#cddfeb"/>
+    <use href="#wave" x="28" y="35"/>
+    <text x="28" y="103" class="heading">设计要点</text>
+    <text x="28" y="150" class="section blue">延续熟悉的蓝白语言</text>
+    <text x="28" y="180" class="body muted">原创双海浪、圆角卡片、轻分割线。</text>
+    <text x="28" y="210" class="body muted">使用“海大”文字，不使用学校徽标。</text>
+    <line x1="28" y1="238" x2="362" y2="238" class="divider"/>
+    <text x="28" y="279" class="section blue">让状态和行动一眼可见</text>
+    <text x="28" y="310" class="body muted">顶部 Wi-Fi 只读，不暗示可以切换。</text>
+    <text x="28" y="340" class="body muted">XHA 不可达，显示红色非校园网。</text>
+    <text x="28" y="370" class="body muted">联网后展示本机，其他设备进入二级页。</text>
+    <line x1="28" y1="398" x2="362" y2="398" class="divider"/>
+    <text x="28" y="439" class="section blue">把节拍与请求量分开表达</text>
+    <text x="28" y="470" class="body muted">默认 1 秒，最低 0.3 秒。</text>
+    <text x="28" y="500" class="body muted">校园网调用卡统计全部 XHA 请求。</text>
+    <text x="28" y="530" class="body muted">累计数与最近 60 秒窗口同时可见。</text>
+    <line x1="28" y1="558" x2="362" y2="558" class="divider"/>
+    <text x="28" y="599" class="section blue">规划示意 · 不是实机截图</text>
+    <text x="28" y="630" class="body muted">账号、IP、MAC、时间和次数均为示例。</text>
+    <text x="28" y="660" class="body muted">设备页按返回条目展示，长内容滚动。</text>
+    <text x="28" y="690" class="body muted">正式适配须覆盖大字体与窄屏。</text>
+    <text x="28" y="757" class="small muted">布局版本 1.3 · 2026-10-23</text>
+  </g>
+
+  <text x="30" y="1870" class="small muted">布局与交互为规划示意；在线信息来自 XHA，数据字段以实际返回为准。每屏保留免费学习交流说明。</text>
+  <text x="30" y="1902" class="small muted">所有数字与网络名称均为虚构演示；不使用外部脚本、图片、字体或学校徽标。</text>
+</svg>

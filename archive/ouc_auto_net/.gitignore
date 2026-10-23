@@ -1,0 +1,7 @@
+.env
+prompt/start.md
+.auto_login.lock
+.login_retry_state.json
+auto_login.log*
+*.tmp
+__pycache__/

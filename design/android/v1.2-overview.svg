@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1000" viewBox="0 0 1320 1000" role="img" aria-labelledby="title desc">
+  <title id="title">海大网络助手 1.2 界面规划示意：在线、连接中与恢复记录</title>
+  <desc id="desc">三屏 Android 布局草图。顶部为 Wi-Fi 选择，下方是小型海大品牌、连接概览、账号、监测与本次启动以来的恢复统计。所有账号与地址为脱敏演示数据，离线不展示会话信息。</desc>
+  <defs>
+    <style>
+      text { font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; fill: #17334d; }
+      .heading { font-size: 28px; font-weight: 700; }
+      .section { font-size: 18px; font-weight: 700; }
+      .body { font-size: 16px; }
+      .small { font-size: 14px; }
+      .muted { fill: #536d83; }
+      .blue { fill: #004098; }
+      .green { fill: #087b63; }
+      .amber { fill: #8c5900; }
+      .bold { font-weight: 700; }
+      .card { fill: #fff; stroke: #dce6ed; stroke-width: 1; }
+      .divider { stroke: #e5edf2; stroke-width: 1; }
+    </style>
+    <g id="wifi" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <path d="M0 6 Q10 -3 20 6 M4 11 Q10 5 16 11 M8 16 Q10 14 12 16"/>
+      <circle cx="10" cy="20" r="1.3" fill="currentColor" stroke="none"/>
+    </g>
+    <g id="wave" fill="none" stroke-linecap="round">
+      <path d="M0 9 C6 0 13 0 20 9 S33 18 40 9" stroke="#004098" stroke-width="3"/>
+      <path d="M0 18 C6 9 13 9 20 18 S33 27 40 18" stroke="#00a0e9" stroke-width="3"/>
+    </g>
+    <g id="chevron" fill="none" stroke="#536d83" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 0 L5 5 L10 0"/></g>
+    <g id="check" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+  </defs>
+
+  <rect width="1320" height="1000" fill="#edf3f8"/>
+  <text x="30" y="48" class="heading">界面规划示意 · 演示数据</text>
+  <text x="30" y="80" class="body muted">海大网络助手 1.2  /  网络选择置顶 · 会话信息优先 · 恢复结果可追溯</text>
+  <text x="30" y="119" class="body bold">01  在线 · 连接详情</text>
+  <text x="465" y="119" class="body bold">02  无网络 · 正在连接</text>
+  <text x="900" y="119" class="body bold">03  恢复记录 · 本次启动</text>
+
+  <!-- 第一屏：在线 -->
+  <rect x="30" y="138" width="390" height="800" rx="30" fill="#fff" stroke="#bacbd8" stroke-width="2"/>
+  <rect x="38" y="146" width="374" height="784" rx="24" fill="#f5f8fb"/>
+  <text x="60" y="174" class="small bold">10:19</text>
+  <path d="M337 168 h4 m4 0 h4 m4 0 h4" stroke="#536d83" stroke-width="3" stroke-linecap="round"/>
+  <rect x="366" y="162" width="22" height="11" rx="3" fill="none" stroke="#536d83" stroke-width="1.5"/><rect x="369" y="165" width="15" height="5" rx="1" fill="#536d83"/>
+  <rect x="54" y="194" width="342" height="56" rx="14" fill="#fff" stroke="#c9dce9"/>
+  <use href="#wifi" x="71" y="208" color="#004098"/>
+  <text x="108" y="229" class="body bold">OUC-WIFI</text>
+  <use href="#chevron" x="366" y="219"/>
+  <use href="#wave" x="56" y="272"/>
+  <text x="108" y="286" class="body bold blue">海大</text>
+  <text x="108" y="309" class="small muted">校园网络辅助工具 · 独立开发</text>
+
+  <rect x="54" y="329" width="342" height="272" rx="18" class="card"/>
+  <text x="72" y="359" class="section">连接概览</text>
+  <rect x="295" y="342" width="82" height="28" rx="14" fill="#e3f4ee"/>
+  <circle cx="311" cy="356" r="4" fill="#087b63"/><text x="322" y="361" class="small green bold">已联网</text>
+  <line x1="72" y1="376" x2="378" y2="376" class="divider"/>
+  <text x="72" y="402" class="small muted">账号</text><text x="173" y="402" class="body bold">20****01</text>
+  <text x="72" y="432" class="small muted">上线时间</text><text x="173" y="432" class="body">10-22 10:18:42</text>
+  <text x="72" y="462" class="small muted">源 IP</text><text x="173" y="462" class="body">192.0.2.23</text>
+  <text x="72" y="492" class="small muted">源 IPv6</text><text x="173" y="492" class="body">2001:db8::23</text>
+  <text x="72" y="522" class="small muted">源 MAC</text><text x="173" y="522" class="body">02:00:00:00:00:23</text>
+  <text x="72" y="552" class="small muted">移动端标识</text><text x="173" y="552" class="body">移动端（1）· 示例</text>
+  <text x="72" y="583" class="small muted">来自校园认证页 · 10:19读取</text><text x="346" y="583" class="small blue">刷新</text>
+
+  <rect x="54" y="617" width="342" height="86" rx="18" class="card"/>
+  <text x="72" y="644" class="small muted">认证使用账号</text><text x="325" y="644" class="small blue">管理</text>
+  <text x="72" y="678" class="body bold">常用账号 · 20****01</text><use href="#chevron" x="366" y="670"/>
+  <rect x="54" y="719" width="342" height="64" rx="18" class="card"/>
+  <text x="72" y="745" class="body bold">自动监测</text><text x="72" y="767" class="small muted">每 120 秒补充检查</text>
+  <rect x="326" y="736" width="52" height="30" rx="15" fill="#004098"/><circle cx="363" cy="751" r="11" fill="#fff"/>
+  <rect x="54" y="799" width="342" height="72" rx="18" fill="#eaf3fa" stroke="#cddfeb"/>
+  <text x="72" y="829" class="body bold blue">本次启动已协助恢复 2 次</text>
+  <text x="72" y="852" class="small muted">最近一次 10:18:42</text><text x="312" y="852" class="small blue">查看全部</text>
+  <text x="72" y="903" class="small blue bold">连接概览</text><text x="197" y="903" class="small muted">恢复记录</text><text x="336" y="903" class="small muted">设置</text>
+  <rect x="171" y="918" width="108" height="4" rx="2" fill="#9eb1c0"/>
+
+  <!-- 第二屏：断网时整组隐藏会话数据 -->
+  <rect x="465" y="138" width="390" height="800" rx="30" fill="#fff" stroke="#bacbd8" stroke-width="2"/>
+  <rect x="473" y="146" width="374" height="784" rx="24" fill="#f5f8fb"/>
+  <text x="495" y="174" class="small bold">10:18</text>
+  <path d="M772 168 h4 m4 0 h4 m4 0 h4" stroke="#536d83" stroke-width="3" stroke-linecap="round"/>
+  <rect x="801" y="162" width="22" height="11" rx="3" fill="none" stroke="#536d83" stroke-width="1.5"/><rect x="804" y="165" width="15" height="5" rx="1" fill="#536d83"/>
+  <rect x="489" y="194" width="342" height="56" rx="14" fill="#fff" stroke="#c9dce9"/>
+  <use href="#wifi" x="506" y="208" color="#004098"/>
+  <text x="543" y="229" class="body bold">OUC-WIFI</text><use href="#chevron" x="801" y="219"/>
+  <use href="#wave" x="491" y="272"/>
+  <text x="543" y="286" class="body bold blue">海大</text>
+  <text x="543" y="309" class="small muted">校园网络辅助工具 · 独立开发</text>
+
+  <rect x="489" y="329" width="342" height="272" rx="18" class="card"/>
+  <text x="507" y="359" class="section">连接概览</text>
+  <rect x="723" y="342" width="90" height="28" rx="14" fill="#fff0d7"/><text x="740" y="361" class="small amber bold">连接处理中</text>
+  <circle cx="660" cy="415" r="24" fill="#fff1da"/>
+  <path d="M645 415 a15 15 0 1 1 22 13" fill="none" stroke="#b17b14" stroke-width="3" stroke-linecap="round"/>
+  <text x="660" y="471" text-anchor="middle" font-size="26" font-weight="700">无网络</text>
+  <text x="660" y="504" text-anchor="middle" class="body">切换账号后检测断网，正在登录…</text>
+  <text x="660" y="533" text-anchor="middle" class="small muted">检测 → 认证 → 复检</text>
+  <text x="660" y="580" text-anchor="middle" class="small muted">仅在已选校园 Wi-Fi 上认证</text>
+
+  <rect x="489" y="617" width="342" height="86" rx="18" class="card"/>
+  <text x="507" y="644" class="small muted">认证使用账号</text><text x="760" y="644" class="small blue">管理</text>
+  <text x="507" y="678" class="body bold">常用账号 · 20****01</text><use href="#chevron" x="801" y="670"/>
+  <rect x="489" y="719" width="342" height="64" rx="18" class="card"/>
+  <text x="507" y="745" class="body bold">自动监测</text><text x="507" y="767" class="small muted">每 120 秒补充检查</text>
+  <rect x="761" y="736" width="52" height="30" rx="15" fill="#004098"/><circle cx="798" cy="751" r="11" fill="#fff"/>
+  <rect x="489" y="799" width="342" height="72" rx="18" fill="#eaf3fa" stroke="#cddfeb"/>
+  <text x="507" y="829" class="body bold blue">本次启动已协助恢复 1 次</text>
+  <text x="507" y="852" class="small muted">本轮复检通过后再累计</text><text x="747" y="852" class="small blue">查看全部</text>
+  <text x="507" y="903" class="small blue bold">连接概览</text><text x="632" y="903" class="small muted">恢复记录</text><text x="771" y="903" class="small muted">设置</text>
+  <rect x="606" y="918" width="108" height="4" rx="2" fill="#9eb1c0"/>
+
+  <!-- 第三屏：仅统计具有助手因果证据的恢复 -->
+  <rect x="900" y="138" width="390" height="800" rx="30" fill="#fff" stroke="#bacbd8" stroke-width="2"/>
+  <rect x="908" y="146" width="374" height="784" rx="24" fill="#f5f8fb"/>
+  <text x="930" y="174" class="small bold">10:19</text>
+  <path d="M1207 168 h4 m4 0 h4 m4 0 h4" stroke="#536d83" stroke-width="3" stroke-linecap="round"/>
+  <rect x="1236" y="162" width="22" height="11" rx="3" fill="none" stroke="#536d83" stroke-width="1.5"/><rect x="1239" y="165" width="15" height="5" rx="1" fill="#536d83"/>
+  <rect x="924" y="194" width="342" height="56" rx="14" fill="#fff" stroke="#c9dce9"/>
+  <use href="#wifi" x="941" y="208" color="#004098"/>
+  <text x="978" y="229" class="body bold">OUC-WIFI</text><use href="#chevron" x="1236" y="219"/>
+  <use href="#wave" x="926" y="272"/>
+  <text x="978" y="286" class="body bold blue">海大</text>
+  <text x="978" y="309" class="small muted">校园网络辅助工具 · 独立开发</text>
+
+  <text x="927" y="359" class="section">恢复记录</text><text x="1198" y="359" class="small blue">返回概览</text>
+  <rect x="924" y="379" width="342" height="118" rx="18" fill="#eaf3fa" stroke="#cddfeb"/>
+  <text x="942" y="409" class="small blue">本次启动以来已协助恢复</text>
+  <text x="942" y="456" fill="#004098" font-size="36" font-weight="700">2<tspan font-size="18"> 次</tspan></text>
+  <text x="942" y="481" class="small muted">启动时间 10-22 09:30</text>
+
+  <rect x="924" y="513" width="342" height="338" rx="18" class="card"/>
+  <line x1="950" y1="548" x2="950" y2="789" stroke="#d3e2eb" stroke-width="2"/>
+  <circle cx="950" cy="549" r="8" fill="#087b63"/><use href="#check" x="945" y="545" color="#fff" transform="translate(189 109) scale(.8)"/>
+  <text x="970" y="554" class="body bold">10:18:42 · 已协助恢复</text>
+  <text x="970" y="582" class="small muted">切换账号后断网 → 认证 → 复检通过</text>
+  <text x="970" y="607" class="small muted">OUC-WIFI · 耗时 8 秒</text>
+  <line x1="970" y1="626" x2="1248" y2="626" class="divider"/>
+
+  <circle cx="950" cy="652" r="8" fill="#087b63"/>
+  <text x="970" y="657" class="body bold">09:47:06 · 已协助恢复</text>
+  <text x="970" y="685" class="small muted">周期检测断网 → 认证 → 复检通过</text>
+  <text x="970" y="710" class="small muted">OUC-WIFI · 耗时 6 秒</text>
+  <line x1="970" y1="729" x2="1248" y2="729" class="divider"/>
+
+  <circle cx="950" cy="756" r="8" fill="#fff" stroke="#93a7b8" stroke-width="2"/>
+  <text x="970" y="761" class="body bold">09:36:20 · 网络自行恢复</text>
+  <text x="970" y="789" class="small muted">未进行认证，不计入协助恢复次数</text>
+  <text x="970" y="814" class="small muted">OUC-WIFI · 观察耗时 3 秒</text>
+  <text x="942" y="875" class="small muted">按故障事件去重 · 一次恢复只记一次</text>
+  <text x="942" y="903" class="small muted">连接概览</text><text x="1067" y="903" class="small blue bold">恢复记录</text><text x="1206" y="903" class="small muted">设置</text>
+  <rect x="1041" y="918" width="108" height="4" rx="2" fill="#9eb1c0"/>
+
+  <text x="30" y="974" class="small muted">免费软件，仅用于学习交流 · 布局为规划示意，数值为演示；使用普通文字与原创波纹。</text>
+</svg>

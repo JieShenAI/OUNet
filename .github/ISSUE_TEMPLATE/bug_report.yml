@@ -1,0 +1,36 @@
+name: Bug report / 问题反馈
+description: 报告可复现的问题（请先脱敏）
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: 请勿提交真实账号、密码、令牌、原始认证响应或设备标识。安全问题请参考 SECURITY.md。
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 平台
+      options: [Android, Windows Desktop, Python CLI]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 应用版本与系统版本
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现步骤
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期与实际行为
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: 脱敏日志或截图（可选）

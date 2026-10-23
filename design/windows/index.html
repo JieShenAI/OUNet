@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>海大网络助手 · Windows 交互设计</title>
+  <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2 8.5a16 16 0 0 1 20 0M5.5 12a10.5 10.5 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0"/><circle cx="12" cy="19" r=".7"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 4-4 7-8 9-4-2-8-5-8-9V6Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6 2.1-2.1"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="i-log" viewBox="0 0 24 24"><rect x="5" y="3" width="15" height="18" rx="2"/><path d="M9 8h7M9 12h7M9 16h5M3 7h3M3 12h3M3 17h3"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1.5 1-1.5 1.5-1.5 2.5M12 17h.01"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 8a8.5 8.5 0 1 0 .5 7M20 3v5h-5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 3h7v7m0-7L10 14M10 5H4v16h16v-7"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></symbol>
+  </defs></svg>
+
+  <header class="prototype-bar">
+    <div class="prototype-label"><span class="prototype-mark"></span><strong>WINDOWS CONCEPT</strong><span class="bar-divider"></span><span>可交互原型 · 全部为模拟数据</span></div>
+    <div class="prototype-actions">
+      <label for="scenario">演示状态</label>
+      <select id="scenario" aria-label="演示状态"><option value="online">正常联网</option><option value="offline">断网 / 认证失败</option><option value="offline-success">断网 / 认证恢复</option><option value="protected">三轮失败保护</option><option value="wrongwifi">其他 Wi-Fi</option><option value="permission">Wi-Fi 权限异常</option><option value="paused">手动暂停</option></select>
+      <button class="demo-link" id="simulate-recovery" title="模拟外网恢复，检查通过后再清除失败保护" disabled>恢复外网</button>
+      <button class="demo-link" id="preview-setup">首次设置</button><button class="demo-link" id="preview-install">安装流程</button>
+    </div>
+  </header>
+
+  <div class="desktop-window" id="app-window">
+    <aside class="sidebar">
+      <div class="school-brand"><img src="assets/ouc-logo.svg" alt="中国海洋大学 Ocean University of China" width="172" height="44"></div>
+      <div class="app-brand"><img src="assets/app-icon.svg" alt="" width="30" height="30"><div><strong>海大网络助手</strong><span>OUC NETWORK ASSISTANT</span></div></div>
+      <nav aria-label="主导航">
+        <button class="nav-item active" data-page="overview" aria-current="page"><svg><use href="#i-home"/></svg>连接概览</button>
+        <button class="nav-item" data-page="account"><svg><use href="#i-user"/></svg>账号与网络</button>
+        <button class="nav-item" data-page="activity"><svg><use href="#i-log"/></svg>连接记录</button>
+        <button class="nav-item" data-page="settings"><svg><use href="#i-settings"/></svg>偏好设置</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="nav-item" data-page="help"><svg><use href="#i-help"/></svg>帮助与关于</button>
+        <div class="campus-card"><div class="campus-overlay"><span>海纳百川</span><span>取则行远</span><small>OCEAN UNIVERSITY OF CHINA</small></div></div>
+        <p class="sidebar-caption">个人校园网络工具 · 非学校官方软件</p>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <div class="titlebar"><span>海大网络助手</span><div class="window-controls"><button title="收起到托盘" aria-label="收起到托盘" id="minimize"><span class="minimize-glyph"></span></button><button title="窗口布局示意" aria-label="窗口布局示意" id="maximize"><span class="maximize-glyph"></span></button><button title="关闭窗口，继续在托盘守护" aria-label="关闭到托盘" id="close-window"><svg><use href="#i-close"/></svg></button></div></div>
+      <main id="main-content">
+        <section class="page active" id="page-overview" aria-labelledby="overview-title">
+          <div class="page-heading"><div><div class="eyebrow">CONNECTION OVERVIEW</div><h1 id="overview-title">每一次连接，都安心。</h1><p>网络的事，交给后台。专注你的学习与研究。</p></div><span class="quiet-badge"><span></span>静默守护</span></div>
+          <div class="status-hero" id="status-hero">
+            <div class="hero-content"><span class="status-pill" id="connection-pill"><span class="status-dot"></span><span>外网可用</span></span><h2 id="connection-title">网络已连接</h2><p id="connection-description">当前电脑可正常访问互联网，无需提交校园网认证。</p><div class="hero-actions"><button class="button primary" id="check-network"><svg><use href="#i-refresh"/></svg><span>检查并连接</span></button><button class="button text" id="hero-secondary">查看连接记录<svg><use href="#i-arrow"/></svg></button></div><div class="last-check"><span class="tiny-dot"></span><span id="check-caption">上次检查 刚刚 · 下次检查约 2 分钟后</span></div></div>
+            <div class="connection-visual" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="connection-core"><svg><use href="#i-wifi"/></svg><span class="core-check"><svg><use href="#i-check"/></svg></span></div><span class="visual-caption">CONNECTED, QUIETLY.</span></div>
+            <svg class="hero-waves" viewBox="0 0 920 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 75C130 20 220 110 390 55S640 0 920 60V100H0Z" fill="currentColor" opacity=".45"/><path d="M0 90C190 35 260 100 440 70S700 10 920 83V100H0Z" fill="currentColor"/></svg>
+          </div>
+          <div class="summary-grid">
+            <article class="surface guard-card"><div class="card-top"><span class="icon-box blue"><svg><use href="#i-shield"/></svg></span><button class="switch on" id="monitor-toggle" role="switch" aria-checked="true" aria-label="自动守护"><span></span></button></div><h3>自动守护<span class="inline-state" id="monitor-label">已开启</span></h3><p id="monitor-description">每 2 分钟检查外网，只在断网时尝试恢复。</p><div class="card-bottom"><svg><use href="#i-clock"/></svg><span>锁屏后继续运行</span><button class="inline-link" data-go="settings">设置</button></div></article>
+            <article class="surface protection-card" id="protection-card"><div class="card-top"><span class="icon-box teal"><svg><use href="#i-lock"/></svg></span><span class="protection-count"><strong id="failure-number">0</strong><span>/ 3 轮</span></span></div><h3>失败保护<span class="inline-state" id="protection-label">待命中</span></h3><p id="protection-description">10 分钟内连续 3 轮失败，暂停校园网认证。</p><div class="card-bottom"><span class="budget-track" aria-hidden="true"><i></i><i></i><i></i></span><span id="budget-caption">当前没有连续失败</span><button class="inline-link" id="protection-details">了解保护</button></div></article>
+          </div>
+          <div class="network-strip surface"><div><span class="icon-box subtle"><svg><use href="#i-wifi"/></svg></span><span><small>当前 Wi-Fi</small><strong id="current-wifi">HUAWEI-Jie_5G</strong></span></div><span class="vertical-line"></span><div><span class="icon-box subtle"><svg><use href="#i-user"/></svg></span><span><small>校园网账号</small><strong>演示账号 · 已保存</strong></span></div><button class="inline-link" data-go="account">管理网络<svg><use href="#i-arrow"/></svg></button></div>
+          <section class="recent-section" aria-labelledby="recent-heading"><div class="section-heading"><h3 id="recent-heading">最近活动</h3><button class="inline-link" data-go="activity">全部记录<svg><use href="#i-arrow"/></svg></button></div><div id="recent-list" class="event-list"></div></section>
+        </section>
+
+        <section class="page" id="page-account" aria-labelledby="account-title"><div class="page-heading"><div><div class="eyebrow">ACCOUNT & NETWORK</div><h1 id="account-title">连接，从这里开始。</h1><p>保存一次校园网账号，之后在需要时自动连接。</p></div></div>
+          <form id="account-form" class="surface form-card"><div class="form-section-title"><span class="icon-box blue"><svg><use href="#i-user"/></svg></span><div><h2>校园网账号</h2><p>仅用于 xha.ouc.edu.cn 校园网认证</p></div><span class="small-badge">演示配置</span></div><div class="form-fields"><label>校园网账号<input id="username" value="demo_student" autocomplete="off" spellcheck="false" required maxlength="64"><small>原型使用虚构账号，请勿输入真实凭据。</small></label><label>校园网密码<span class="password-field"><input id="password" type="password" value="demo_only_123" autocomplete="off" required maxlength="128"><button type="button" id="show-password" aria-label="显示演示密码"><svg><use href="#i-eye"/></svg></button></span></label></div><div class="security-note"><svg><use href="#i-lock"/></svg><p>正式版设计：凭据由 Windows 当前用户加密保存；认证保持 HTTPS 证书验证，日志不记录密码。</p></div><div class="form-footer"><span id="account-save-state">当前为原型数据，不会保存或提交到服务器。</span><button class="button primary" type="submit">保存配置</button></div></form>
+          <div class="surface settings-group"><div class="setting-row"><div><h3>目标无线网络</h3><p>选择 Windows 中已保存的 Wi-Fi 配置。</p></div><select id="target-wifi" aria-label="目标无线网络"><option>HUAWEI-Jie_5G</option><option>OUC-DEMO</option></select></div><div class="setting-row"><div><h3>自动切换到目标 Wi-Fi</h3><p>当前连接其他 Wi-Fi 时，默认保持原连接。</p></div><button class="switch" role="switch" aria-checked="false" aria-label="自动切换到目标 Wi-Fi" data-setting="wifi"><span></span></button></div></div>
+          <div class="soft-note"><svg><use href="#i-info"/></svg><p>Wi-Fi 密码由 Windows 管理，与校园网账号密码不同。网络恢复后，失败保护会自动清除。</p></div>
+        </section>
+
+        <section class="page" id="page-activity" aria-labelledby="activity-title"><div class="page-heading"><div><div class="eyebrow">CONNECTION HISTORY</div><h1 id="activity-title">连接过程，有迹可循。</h1><p>只记录必要的结果，不记录账号密码和完整认证链接。</p></div><button class="button secondary" id="export-log"><svg><use href="#i-download"/></svg>导出演示记录</button></div><div class="surface history-card"><div class="history-toolbar"><h2>今天</h2><label>筛选<select id="log-filter" aria-label="筛选连接记录"><option value="all">全部活动</option><option value="success">成功</option><option value="warning">需要关注</option><option value="info">信息</option></select></label></div><div id="full-event-list" class="event-list full-events"></div><div class="history-footer">日志仅保存在本机 · 正式版采用有容量限制的滚动保存</div></div><div class="soft-note"><svg><use href="#i-info"/></svg><p>“外网可用”表示当前电脑已有互联网连接，不等于已确认校园 Wi-Fi 的认证状态。</p></div></section>
+
+        <section class="page" id="page-settings" aria-labelledby="settings-title"><div class="page-heading"><div><div class="eyebrow">PREFERENCES</div><h1 id="settings-title">按你的习惯，安静运行。</h1><p>自动化留在后台，重要变化才打扰你。</p></div></div>
+          <h2 class="group-label">启动与窗口</h2><div class="surface settings-group"><div class="setting-row"><div><h3>登录 Windows 后自动运行</h3><p>锁屏不会停止守护；注销、关机后停止。</p></div><button class="switch" role="switch" aria-checked="false" aria-label="登录 Windows 后自动运行" data-setting="startup"><span></span></button></div><div class="setting-row"><div><h3>关闭窗口时收起到托盘</h3><p>继续守护网络。完全停止请在托盘选择“退出”。</p></div><button class="switch on" role="switch" aria-checked="true" aria-label="关闭窗口时收起到托盘" data-setting="tray"><span></span></button></div></div>
+          <h2 class="group-label">检查与提醒</h2><div class="surface settings-group"><div class="setting-row"><div><h3>外网检查间隔</h3><p>有网时不发送校园网认证请求。</p></div><select id="interval" aria-label="外网检查间隔"><option value="2">2 分钟（推荐）</option><option value="1">1 分钟</option><option value="5">5 分钟</option></select></div><div class="setting-row"><div><h3>仅提醒重要变化</h3><p>网络恢复、失败保护暂停，以及需要你处理的问题。</p></div><button class="switch on" role="switch" aria-checked="true" aria-label="仅提醒重要变化" data-setting="notifications"><span></span></button></div></div>
+          <h2 class="group-label">失败保护</h2><div class="surface settings-group"><div class="setting-row"><div><h3>10 分钟内连续 3 轮失败，暂停认证</h3><p>保护不会因等待、重启或重新开启守护而解除。</p></div><span class="small-badge">始终启用</span></div><div class="setting-row"><div><h3>重置失败保护</h3><p>确认账号与网络无误后，手动恢复认证尝试。</p></div><button class="button secondary" id="reset-protection">重置保护</button></div></div><p class="page-footnote">原型开关只演示交互，不修改电脑设置。</p>
+        </section>
+
+        <section class="page" id="page-help" aria-labelledby="help-title"><div class="page-heading"><div><div class="eyebrow">HELP & ABOUT</div><h1 id="help-title">让网络回归简单。</h1><p>遇到问题时，有清楚的下一步。</p></div></div><div class="surface about-card"><img src="assets/app-icon.svg" alt="海大网络助手原创图标" width="64" height="64"><div><h2>海大网络助手</h2><p>Windows 桌面版 · 产品与交互概念 v0.1</p><span class="small-badge">个人工具 · 非学校官方软件</span></div></div><div class="faq-list"><details open><summary>为什么有网时不登录？</summary><p>先检测电脑能否访问外网。有网就结束检查，不向校园网提交账号密码。断网时才在目标 Wi-Fi 上尝试认证。</p></details><details><summary>触发三轮失败保护后，什么时候重试？</summary><p>不会到点自动重试。检测到外网恢复会清除保护；也可以确认账号和网络无误后手动重置。每轮认证可能包含读取页面、配置和提交登录等多个请求。</p></details><details><summary>已经配置任务计划程序，怎么办？</summary><p>正式版首次设置将识别匹配本项目路径的旧任务，展示任务名和处理选项，经确认后停用旧入口。新程序内部负责检查间隔，避免两个入口重复认证。</p></details><details><summary>锁屏、睡眠和关机有什么区别？</summary><p>锁屏时程序继续运行。睡眠时不承诺持续检测，唤醒后会合并网络事件再检查。关机或注销后停止；选择登录后自启可在下次登录时恢复。</p></details></div><div class="source-links"><a href="https://www.ouc.edu.cn/" target="_blank" rel="noreferrer">中国海洋大学官网<svg><use href="#i-external"/></svg></a><a href="SOURCES.md" target="_blank">素材来源与色彩说明<svg><use href="#i-external"/></svg></a></div><p class="page-footnote">校徽、校名字标与校园摄影来自学校官网；波浪 Wi-Fi 应用图标与界面由本项目原创设计。</p></section>
+      </main>
+      <footer class="app-statusbar"><span><span class="tiny-dot green" id="footer-dot"></span><span id="footer-status">自动守护运行中</span></span><span>本地运行<span class="statusbar-separator">·</span>HTTPS 认证</span><button id="open-tray" aria-label="查看托盘菜单">托盘预览<svg><use href="#i-arrow"/></svg></button></footer>
+    </div>
+  </div>
+
+  <div class="prototype-bottom"><span>设计提案 01 / 海蓝与轻盈的秩序</span><span>Windows 10 / 11<span>·</span>桌面 · 托盘 · 首次设置 · 安装</span></div>
+  <div class="tray-stage" id="tray-stage" hidden><div class="tray-return"><img src="assets/app-icon.svg" alt="" width="64" height="64"><h2>窗口已收起，守护仍在。</h2><p>真实桌面版会留在 Windows 通知区域。</p><button class="button primary" id="return-window">打开主界面</button></div><div class="tray-menu" role="dialog" aria-label="托盘菜单"><div class="tray-heading"><img src="assets/app-icon.svg" width="30" height="30" alt=""><div><strong>海大网络助手</strong><span id="tray-state">外网可用 · 守护中</span></div></div><button id="tray-open">打开主界面</button><button id="tray-check">检查并连接</button><button id="tray-pause">暂停自动守护</button><hr><button id="tray-exit">退出网络助手</button><small>此处为托盘交互演示</small></div></div>
+  <dialog id="modal" aria-labelledby="modal-title"><div id="modal-content"></div></dialog>
+  <div class="toast" role="status" aria-live="polite" id="toast" hidden></div>
+</body>
+</html>

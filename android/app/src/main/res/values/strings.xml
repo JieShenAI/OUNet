@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="free_notice">免费软件，仅用于学习交流</string>
+    <string name="monitor_summary">每%1$s秒本地评估 · %2$s</string>
+    <string name="seconds_text">%1$s秒</string>
+    <string name="xha_counts">本次启动请求尝试：%1$d 次\n最近60秒：%2$d 次</string>
+    <string name="recovery_count">本次启动已协助恢复 %1$d 次</string>
+</resources>

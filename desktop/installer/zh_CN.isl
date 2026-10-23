@@ -1,0 +1,77 @@
+; Project-maintained Simplified Chinese UI; exceptional messages fall back to Default.isl.
+[LangOptions]
+LanguageName=简体中文
+LanguageID=$0804
+LanguageCodePage=936
+DialogFontName=Microsoft YaHei UI
+DialogFontSize=9
+WelcomeFontName=Microsoft YaHei UI
+WelcomeFontSize=14
+
+[Messages]
+SetupAppTitle=安装
+SetupWindowTitle=%1 · 安装
+UninstallAppTitle=卸载
+UninstallAppFullTitle=卸载 %1
+InformationTitle=提示
+ErrorTitle=错误
+SetupLdrStartupMessage=将安装 %1，是否继续？
+SetupAppRunningError=%1 正在运行。%n%n请在系统托盘中选择“退出”，再继续更新。不要只关闭主窗口。
+UninstallAppRunningError=%1 正在运行。%n%n请先在系统托盘中选择“退出”，再继续卸载。
+ExitSetupTitle=退出安装
+ExitSetupMessage=安装尚未完成。现在退出将不会完成安装。%n%n是否退出？
+ButtonBack=上一步(&B)
+ButtonNext=下一步(&N)
+ButtonInstall=安装(&I)
+ButtonOK=确定
+ButtonCancel=取消
+ButtonYes=是(&Y)
+ButtonNo=否(&N)
+ButtonFinish=完成(&F)
+ButtonBrowse=浏览(&B)…
+ButtonWizardBrowse=浏览(&B)…
+ClickNext=点击“下一步”继续，或点击“取消”退出。
+BrowseDialogTitle=选择文件夹
+BrowseDialogLabel=选择一个文件夹后，点击“确定”。
+WelcomeLabel1=欢迎使用OUNet
+WelcomeLabel2=为每一次连接，留一份安心。%n%n即将安装 [name/ver]。程序将安装到当前 Windows 用户，无需另外安装 Python。%n%n这是个人开发的校园网络工具，非学校官方软件。
+WizardInfoBefore=使用说明
+InfoBeforeLabel=请阅读使用与数据说明。
+InfoBeforeClickLabel=准备好后点击“下一步”。
+WizardSelectDir=安装位置
+SelectDirDesc=将OUNet安装到哪里？
+SelectDirLabel3=程序文件将安装到以下文件夹。
+SelectDirBrowseLabel=点击“下一步”继续，或点击“浏览”更换文件夹。
+DiskSpaceGBLabel=至少需要 [gb] GB 可用空间。
+DiskSpaceMBLabel=至少需要 [mb] MB 可用空间。
+WizardSelectTasks=快捷方式
+SelectTasksDesc=选择需要的快捷方式。
+SelectTasksLabel2=登录后自启可在软件内设置，本安装器不会默认开启。
+WizardReady=准备安装
+ReadyLabel1=即将安装 [name]。
+ReadyLabel2a=点击“安装”开始，或点击“上一步”修改设置。
+ReadyLabel2b=点击“安装”开始。
+ReadyMemoDir=安装位置：
+ReadyMemoTasks=其他选项：
+WizardPreparing=正在准备
+PreparingDesc=正在准备安装 [name]。
+WizardInstalling=正在安装
+InstallingLabel=正在安装桌面组件，请稍候。
+FinishedHeadingLabel=连接，即将更简单。
+FinishedLabel=已完成 [name] 安装。%n%n首次打开后，配置校园网账号与目标 Wi-Fi。如使用过旧脚本，请在“账号与网络”中导入并完成迁移。
+FinishedLabelNoIcons=已完成 [name] 安装。
+ClickFinish=点击“完成”关闭安装向导。
+StatusCreateDirs=正在创建文件夹…
+StatusExtractFiles=正在安装桌面组件…
+StatusCreateIcons=正在创建快捷方式…
+StatusCreateRegistryEntries=正在保存安装信息…
+StatusRunProgram=正在启动网络助手…
+ConfirmUninstall=确定卸载 %1 及其程序组件吗？
+UninstallStatusLabel=正在卸载 %1，请稍候。
+UninstalledAll=%1 已卸载。用户数据按你的选择保留，失败保护记录继续保留。
+WizardUninstalling=正在卸载
+StatusUninstalling=正在卸载 %1…
+
+[CustomMessages]
+CreateDesktopIcon=创建桌面快捷方式
+LaunchProgram=启动OUNet并完成设置

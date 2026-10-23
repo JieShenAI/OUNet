@@ -1,0 +1,32 @@
+{
+  "mobile": {
+    "width": 1254,
+    "height": 1254,
+    "alpha": false
+  },
+  "desktop": {
+    "width": 1254,
+    "height": 1254,
+    "alpha": true
+  },
+  "logo": {
+    "width": 2172,
+    "height": 724,
+    "alpha": true
+  },
+  "icoSizes": [
+    16,
+    20,
+    24,
+    32,
+    40,
+    48,
+    64,
+    128,
+    256
+  ],
+  "androidAliasIdentical": true,
+  "androidVersion": "1.3.3",
+  "androidSha256": "fa6cdc0aaca6d09e4fba97b78722728e3aa2d9ccdc92d719e3f2bc4b0b593a94",
+  "windowsInstallerHashVerified": true
+}

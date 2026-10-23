@@ -1,0 +1,5 @@
+OUNet © 2026 JShen
+
+本项目自有代码与原创素材采用 MIT License。允许使用、复制、修改和分发，并须保留版权与许可声明。
+完整许可证见 https://github.com/JieShenAI/OUNet/blob/main/LICENSE 。
+第三方组件、学校标识与摄影保留其各自许可和权利。本项目非中国海洋大学官方软件。

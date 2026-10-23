@@ -1,0 +1,102 @@
+name: Build OUNet Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: 'debug can be installed alongside release; release requires the existing signing key'
+        required: true
+        default: debug
+        type: choice
+        options: [debug, release]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install SDK packages
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Prepare release signing
+        if: inputs.variant == 'release'
+        env:
+          OUC_KEYSTORE_BASE64: ${{ secrets.OUC_KEYSTORE_BASE64 }}
+          OUC_STORE_PASSWORD: ${{ secrets.OUC_STORE_PASSWORD }}
+          OUC_KEY_ALIAS: ${{ secrets.OUC_KEY_ALIAS }}
+          OUC_KEY_PASSWORD: ${{ secrets.OUC_KEY_PASSWORD }}
+        run: |
+          python3 - <<'PY'
+          import os, base64
+          from pathlib import Path
+          keys = ['OUC_KEYSTORE_BASE64', 'OUC_STORE_PASSWORD', 'OUC_KEY_ALIAS', 'OUC_KEY_PASSWORD']
+          if any(not os.environ.get(k) for k in keys):
+              raise SystemExit('Configure the four OUC signing secrets using the existing release key first.')
+          Path('.signing').mkdir(exist_ok=True)
+          Path('.signing/release.jks').write_bytes(base64.b64decode(os.environ['OUC_KEYSTORE_BASE64'], validate=True))
+          def escape(v):
+              return v.replace('\\', '\\\\').replace('\n', '\\n').replace('\r', '\\r').replace('=', '\\=').replace(':', '\\:')
+          Path('keystore.properties').write_text('\n'.join([
+              'storeFile=.signing/release.jks',
+              'storePassword=' + escape(os.environ['OUC_STORE_PASSWORD']),
+              'keyAlias=' + escape(os.environ['OUC_KEY_ALIAS']),
+              'keyPassword=' + escape(os.environ['OUC_KEY_PASSWORD'])
+          ]), encoding='utf-8')
+          PY
+      - name: Test and check
+        run: bash gradlew :app:testDebugUnitTest :app:lintDebug --no-daemon
+      - name: Build debug APK
+        if: inputs.variant == 'debug'
+        run: bash gradlew :app:assembleDebug --no-daemon
+      - name: Build signed release APK
+        if: inputs.variant == 'release'
+        run: bash gradlew :app:assembleRelease --no-daemon
+      - name: Package versioned APK and checksum
+        id: package
+        env:
+          APK_VARIANT: ${{ inputs.variant }}
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, re, shutil
+          from pathlib import Path
+          variant = os.environ['APK_VARIANT']
+          folder = Path('app/build/outputs/apk') / variant
+          metadata = json.loads((folder / 'output-metadata.json').read_text())
+          element = metadata['elements'][0]
+          version = element['versionName']
+          if variant == 'debug' and version.endswith('-debug'):
+              version = version[:-6]
+          if not re.fullmatch(r'[0-9A-Za-z][0-9A-Za-z.+-]*', version):
+              raise SystemExit('Invalid version in APK metadata')
+          output = Path('dist')
+          output.mkdir(exist_ok=True)
+          apk = output / f'OUNet-{version}-{variant}.apk'
+          shutil.copyfile(folder / element['outputFile'], apk)
+          digest = hashlib.sha256(apk.read_bytes()).hexdigest()
+          apk.with_suffix('.apk.sha256').write_text(f'{digest}  {apk.name}\n')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as result:
+              result.write(f'version={version}\n')
+          PY
+      - name: Prepare public Android update metadata
+        if: inputs.variant == 'release'
+        working-directory: android
+        run: |
+          python release_metadata.py --apk "dist/OUNet-${{ steps.package.outputs.version }}-release.apk" --apk-info app/build/outputs/apk/release/output-metadata.json --apksigner "$ANDROID_HOME/build-tools/35.0.0/apksigner" --notes ../docs/ANDROID_V1_3_4_RELEASE_NOTES.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OUNet-${{ steps.package.outputs.version }}-${{ inputs.variant }}
+          path: android/dist/*
+          if-no-files-found: error
+          retention-days: 14

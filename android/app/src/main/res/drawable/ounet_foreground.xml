@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The inset keeps the mark inside the adaptive safe area. The opaque blue
+     source still extends beyond the launcher mask, preventing a visible tile edge. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android" android:inset="12dp">
+    <bitmap android:src="@drawable/ounet_launcher" android:gravity="fill" />
+</inset>

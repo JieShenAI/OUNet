@@ -1,0 +1,22 @@
+* text=auto
+*.py text eol=lf
+*.java text eol=lf
+*.qml text eol=lf
+*.md text eol=lf
+*.md whitespace=-blank-at-eol
+*.yml text eol=lf
+*.gradle text eol=lf
+*.properties text eol=lf
+*.sh text eol=lf
+gradlew text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.png binary
+*.jpg binary
+*.ico binary
+*.jar binary
+*.zip binary
+
+# Preserve upstream license texts verbatim, including their original spacing.
+desktop/licenses/** -whitespace

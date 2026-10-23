@@ -1,0 +1,9 @@
+.venv/
+.cache/
+.toolchain/
+build/
+dist/
+__pycache__/
+*.log
+*.tmp
+screenshots/

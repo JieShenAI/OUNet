@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>海大网络助手 · Windows v0.2 设计原型</title>
+  <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml">
+  <style>
+    :root{font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI","Microsoft YaHei",sans-serif;font-size:13px;color:#22364f;background:#eaf0f6;--blue:#004098;--navy:#112e51;--muted:#718399;--line:#e5ebf2;--green:#167960;--amber:#946114;--red:#af4534;--canvas:#f5f7fb}
+    *{box-sizing:border-box}body{margin:0;padding:14px 20px 12px;background:radial-gradient(ellipse at 30% 0,#fcfdff,transparent 72%);min-height:100vh}button,input,select{font:inherit;color:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.48}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #54b9f0;outline-offset:3px}button{border:0;background:none}input,select{height:37px;border:1px solid #d8e1ed;background:#fff;border-radius:6px;padding:0 11px;min-width:0}input{width:100%}select{cursor:pointer}input:focus,select:focus{border-color:#3b83c8}input::placeholder{color:#7e8fa4}h1,h2,h3,p{margin:0}[hidden]{display:none!important}.icon{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}.sprite{position:absolute;width:0;height:0;overflow:hidden}.demo-bar{max-width:1180px;margin:0 auto 11px;display:flex;gap:14px;align-items:center;justify-content:space-between;min-height:41px}.demo-title{display:flex;align-items:center;gap:9px;white-space:nowrap}.demo-title>i{height:8px;width:8px;background:var(--blue);transform:rotate(45deg)}.demo-title strong{font-size:11px;letter-spacing:1.5px;color:#4e6884}.demo-title span{font-size:10px;color:#7f8fa2}.demo-controls{display:flex;gap:7px;align-items:center}.demo-controls label{font-size:10px;color:#657a92;white-space:nowrap}.demo-controls select{height:31px;width:190px;font-size:11px;background:#f9fbfe}.demo-controls .button{height:31px;font-size:11px;padding:0 11px}.window{max-width:1180px;margin:auto;height:calc(100vh - 102px);min-height:630px;max-height:880px;display:flex;border:1px solid #bfccdc;border-radius:12px;overflow:hidden;box-shadow:0 22px 54px -30px #19395869,0 3px 12px #19395810;background:var(--canvas)}.sidebar{flex:0 0 184px;background:var(--navy);color:#fff;display:flex;flex-direction:column;padding:23px 13px 13px}.school-logo{width:155px;height:auto;margin:0 auto 21px;display:block}.brand{border-top:1px solid #ffffff16;display:flex;gap:9px;align-items:center;padding:23px 3px 27px}.brand img{width:33px;height:33px;border:1px solid #ffffff25;border-radius:9px}.brand strong{display:block;font-weight:600;font-size:13px;letter-spacing:.5px}.brand small{display:block;margin-top:5px;font-size:8px;letter-spacing:1px;color:#98b3d2}nav{display:grid;gap:6px}.nav{display:flex;gap:11px;align-items:center;text-align:left;color:#b8cadf;position:relative;width:100%;padding:13px 13px;border-radius:7px;font-size:12px}.nav .icon{width:17px;height:17px}.nav:hover{background:#ffffff0b;color:#fff}.nav.active{color:#fff;background:#ffffff10}.nav.active:before{content:"";position:absolute;left:0;top:15px;height:15px;width:3px;border-radius:3px;background:#6bd1ff}.sidebar-bottom{margin-top:auto;padding-top:24px}.campus{height:126px;border-radius:8px;overflow:hidden;position:relative;background:url('assets/ouc-campus.jpg') center/cover}.campus:after{content:"海纳百川 · 取则行远";position:absolute;inset:0;display:flex;align-items:flex-end;padding:14px 11px;background:linear-gradient(0deg,#0c2c50ef,transparent);font-size:10px;letter-spacing:1px;color:#e3edf7}.sidebar-note{font-size:8px;text-align:center;color:#92accb;margin-top:12px;line-height:1.9}.workspace{display:flex;flex-direction:column;min-width:0;flex:1}.titlebar{height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding-left:25px;color:#8b99ab;font-size:10px;background:#fbfcfe;border-bottom:1px solid var(--line)}.window-glyphs{display:flex;gap:23px;padding:0 17px;font-size:15px;color:#8a98aa}.window-glyphs span:nth-child(2){font-size:12px}main{flex:1;min-height:0;overflow:auto;scrollbar-width:thin;scrollbar-color:#ced9e6 transparent;padding:23px 27px 24px}.page{display:none;max-width:940px;margin:auto;animation:appear .15s ease}.page.active{display:block}@keyframes appear{from{opacity:.55;transform:translateY(3px)}to{opacity:1;transform:none}}.page-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}.eyebrow{font-size:8px;color:#8a9bb0;font-weight:600;letter-spacing:1.7px;margin-bottom:6px}h1{font-size:23px;letter-spacing:.3px;line-height:1.45;font-weight:620}.subtitle{color:var(--muted);font-size:11px;line-height:1.7;margin-top:5px}.badge{border-radius:5px;padding:5px 8px;background:#edf2f8;color:#678099;font-size:10px;white-space:nowrap}.status{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:5px;background:#e8f4ee;color:var(--green);font-size:10px;white-space:nowrap}.status i,.dot{height:5px;width:5px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0}.status.warn{background:#fff2db;color:var(--amber)}.status.error{background:#fbece7;color:var(--red)}.surface{border:1px solid var(--line);background:#fff;border-radius:10px}.session-card{position:relative;overflow:hidden;border-color:#dce6f1;background:linear-gradient(110deg,#fff 55%,#f2f8ff)}.session-top{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0;gap:12px}.section-title{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600}.icon-tile{width:30px;height:30px;border-radius:8px;background:#eaf2fd;color:#2b6cb5;display:inline-grid;place-items:center;flex-shrink:0}.icon-tile .icon{width:17px;height:17px}.session-kicker{font-size:9px;color:#8b9db1;letter-spacing:1px;font-weight:500;margin-top:4px}.session-meta{display:flex;align-items:center;gap:7px}.session-state{font-size:10px;color:#7a8ea5}.session-state.warn{color:var(--amber)}.session-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:17px 20px 16px;column-gap:27px;row-gap:19px}.session-item{min-width:0}.session-item dt{font-size:10px;color:#8191a5;margin-bottom:7px}.session-item dd{font-size:13px;font-weight:550;margin:0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;line-height:1.45;min-height:19px}.session-item dd.mono{font-family:Consolas,"SFMono-Regular",monospace;font-size:12px;font-weight:500;letter-spacing:-.2px}.session-item dd.loading{color:#96a9be;font-size:11px;font-weight:400}.session-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 20px;border-top:1px solid #eaf0f7;background:#f9fbfe99;color:#8596aa;font-size:9px;line-height:1.7}.session-bottom>span{display:flex;align-items:center;gap:5px}.session-bottom .icon{height:11px;width:11px}.inline-link{color:#3b6a9c;padding:0;font-size:10px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}.inline-link:hover{text-decoration:underline;text-underline-offset:3px}.inline-link .icon{width:12px;height:12px}.button{height:34px;padding:0 13px;border-radius:6px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;font-weight:500}.button .icon{height:14px;width:14px}.button.primary{background:var(--blue);border:1px solid #003983;color:#fff;box-shadow:0 2px 4px #00409810}.button.primary:hover{background:#00347e}.button.secondary{border:1px solid #d8e1ec;background:#fff;color:#536c88}.button.secondary:hover{background:#f4f8fd}.button.quiet{color:#65809e;background:#edf3fa}.button.danger{color:#a34736;background:#fdf0ec;border:1px solid #f0d9cf}.guard-strip{display:flex;align-items:center;gap:15px;padding:15px 18px;margin-top:13px}.guard-copy{flex:1;min-width:0}.guard-copy h2{font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px}.guard-copy h2 span{font-size:9px;font-weight:400;color:#7e91a7}.guard-copy p{font-size:10px;color:#8192a7;line-height:1.7;margin-top:4px}.guard-controls{display:flex;align-items:center;gap:12px}.switch{width:32px;height:18px;background:#c7d2df;border:1px solid #bac7d6;border-radius:20px;padding:2px;display:flex;align-items:center;flex-shrink:0}.switch span{height:12px;width:12px;background:#fff;box-shadow:0 1px 3px #0002;border-radius:50%;transition:transform .15s}.switch.on{background:var(--blue);border-color:var(--blue)}.switch.on span{transform:translateX(13px)}.check-line{padding:10px 1px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:9px;color:#8596aa;min-height:29px}.check-line>span{display:flex;align-items:center;gap:6px}.check-line.warn{color:var(--amber)}.spinner{height:10px;width:10px;border:1.5px solid #b8d0e8;border-top-color:#176db7;border-radius:50%;animation:spin 1s linear infinite;display:inline-block;flex-shrink:0}@keyframes spin{to{transform:rotate(360deg)}}.pause-banner{display:flex;align-items:center;gap:11px;background:#fff3ed;border:1px solid #ecd5c7;border-radius:8px;padding:13px 15px;margin-bottom:13px;color:#98502b}.pause-banner>.icon{width:20px;height:20px}.pause-banner>div{flex:1}.pause-banner strong{display:block;font-size:11px;font-weight:600;line-height:1.6}.pause-banner p{font-size:10px;margin-top:3px;line-height:1.6;color:#a0785e}.pause-banner .button{background:#fff;border-color:#e3cbb9;color:#98502b}.recovery-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:19px 0 11px}.recovery-title{display:flex;align-items:center;gap:8px}.recovery-title h2{font-size:12px;font-weight:600}.recovery-title>span{background:#e8eef7;border-radius:5px;font-size:9px;color:#6882a0;padding:3px 6px}.recovery-heading>small{font-size:9px;color:#8c9caf}.recovery-summary{display:flex;gap:18px;align-items:center;padding:15px 18px}.recovery-total{display:flex;align-items:baseline;gap:5px;min-width:85px;color:#1c604e}.recovery-total strong{font-size:31px;font-weight:550;font-variant-numeric:tabular-nums;line-height:1.1}.recovery-total span{font-size:10px;color:#749589}.recovery-summary p{font-size:10px;color:#769082;line-height:1.8}.recovery-summary p strong{font-weight:500;color:#4d7965;display:block}.recovery-list{border-top:1px solid #edf1f6;padding:1px 18px 4px;max-height:240px;overflow:auto}.empty{display:flex;align-items:center;gap:10px;padding:20px 1px;color:#8798ad}.empty .icon{height:24px;width:24px;color:#a2b5cc}.empty strong{font-size:11px;font-weight:500;display:block;margin-bottom:4px}.empty p{font-size:10px;line-height:1.7}.recovery-row{display:flex;align-items:flex-start;gap:10px;padding:13px 0;border-top:1px solid #eff3f7}.recovery-row:first-child{border-top:0}.recovery-mark{height:19px;width:19px;background:#e6f4ec;border-radius:50%;display:grid;place-items:center;color:#3d8d6c;flex-shrink:0;margin-top:1px}.recovery-mark .icon{height:11px;width:11px}.recovery-row time{display:block;font-size:11px;font-variant-numeric:tabular-nums;font-weight:500}.recovery-row p{font-size:10px;color:#7b8fa6;margin-top:5px;line-height:1.6}.recovery-row .badge{margin-left:auto;background:#eef6f2;color:#669482;font-size:9px}.overview-footnote{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:9px;color:#8b9caf;line-height:1.7}.overview-footnote .icon{width:12px;height:12px}.statusbar{height:29px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 20px;background:#fbfcfe;border-top:1px solid var(--line);color:#8497ad;font-size:9px;flex-shrink:0}.statusbar>span:first-child{display:flex;align-items:center;gap:6px}.statusbar .dot{color:#4c9a7b}.statusbar .dot.warn{color:#b48745}.prototype-footer{max-width:1180px;display:flex;gap:14px;justify-content:space-between;align-items:center;margin:11px auto 0;font-size:9px;color:#8195ab;line-height:1.6}.prototype-footer>span:last-child{color:#627f9d}.form-card{padding:20px;margin-bottom:15px}.form-card-heading{display:flex;align-items:center;gap:10px;margin-bottom:18px}.form-card-heading h2{font-size:13px;font-weight:600}.form-card-heading p{font-size:10px;color:#8293a8;margin-top:5px;line-height:1.6}.form-card-heading>.badge{margin-left:auto}.field{display:block;font-size:11px;font-weight:500}.field>input,.field>select{display:block;margin-top:8px;width:100%}.field small{display:block;font-size:10px;font-weight:400;color:#8597ad;margin-top:7px;line-height:1.7}.wide-field{max-width:100%}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:19px;margin-top:19px}.account-picker{display:flex;align-items:flex-end;gap:9px}.account-picker .field{flex:1}.account-picker .button{height:37px}.active-account-note{display:flex;gap:7px;align-items:center;padding:11px 12px;background:#f3f7fc;border-radius:6px;color:#7890a9;font-size:10px;line-height:1.7;margin-top:16px}.active-account-note .icon{width:13px;height:13px}.active-account-note strong{font-weight:500;color:#496a8d}.form-footer{display:flex;justify-content:space-between;gap:15px;align-items:center;border-top:1px solid #edf1f7;padding-top:15px;margin-top:18px}.form-footer>span{font-size:10px;color:#8a99ac;line-height:1.7}.form-footer>div{display:flex;gap:8px}.soft-note{display:flex;gap:8px;align-items:flex-start;font-size:10px;line-height:1.9;color:#8194ab;margin-top:13px;padding:0 2px}.soft-note .icon{height:14px;width:14px;margin-top:2px}.notice{border:1px solid #e6d8bd;border-radius:7px;padding:11px 13px;background:#fff8eb;color:#967347;font-size:10px;line-height:1.8}.settings-title{font-size:11px;color:#6e839c;font-weight:500;margin:20px 1px 10px}.settings-group{padding:0 19px}.setting-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:17px 0;border-top:1px solid #edf1f6}.setting-row:first-child{border-top:0}.setting-row h3{font-size:11px;font-weight:550;line-height:1.7}.setting-row p{color:#8495a9;font-size:10px;line-height:1.8;margin-top:4px}.setting-row>div:first-child{flex:1}.number-control{display:flex;align-items:center;gap:8px;font-size:11px;color:#6f85a0}.number-control input{width:88px;font-variant-numeric:tabular-nums}.setting-note{background:#f5f8fc;border-radius:6px;color:#7890a9;padding:12px 13px;font-size:10px;line-height:1.9;margin-bottom:15px}.setting-note.warning{background:#fff5e3;color:#916b31}.setting-note strong{font-weight:550;display:block}.schedule-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 0 17px}.schedule-facts>div{border:1px solid #e9eef4;border-radius:6px;padding:10px 11px}.schedule-facts dt{font-size:9px;color:#8295ab}.schedule-facts dd{margin:5px 0 0;font-size:12px;font-weight:500;font-variant-numeric:tabular-nums}.group-footnote{font-size:9px;line-height:1.8;color:#8a9cb1;margin:12px 2px}.about-card{display:flex;align-items:center;gap:16px;padding:23px}.about-card img{height:57px;width:57px}.about-card h2{font-size:17px;font-weight:600}.about-card p{font-size:11px;color:#8194ac;margin:7px 0 11px}.faq{margin-top:17px}.faq details{border-bottom:1px solid #e5ebf2;padding:14px 0}.faq summary{font-size:11px;color:#4e6b8b;font-weight:500;cursor:pointer;line-height:1.8}.faq details p{font-size:10px;line-height:1.95;color:#8093aa;margin:9px 0 0 15px}.help-note{font-size:10px;line-height:1.9;color:#8799af;margin-top:18px}.toast{position:fixed;bottom:55px;left:calc(50% + 70px);transform:translateX(-50%);max-width:min(520px,90vw);padding:12px 18px;color:#fff;background:#173b60f5;box-shadow:0 5px 20px #132c4a30;border:1px solid #42617e;border-radius:7px;font-size:11px;line-height:1.7;z-index:50;text-align:center}.dev-meter{font-variant-numeric:tabular-nums;white-space:nowrap}.faux-link{color:#4d739e}.mobile-brand{display:none}
+    dl{margin:0}
+    @media(min-height:900px){main{padding-top:28px}.session-grid{row-gap:23px;padding-top:22px;padding-bottom:22px}.session-top{padding-top:21px}.guard-strip{padding-top:18px;padding-bottom:18px}.recovery-heading{margin-top:23px}}
+    @media(max-width:1000px){body{padding:12px}.sidebar{flex-basis:168px;padding-left:11px;padding-right:11px}.school-logo{width:143px}.brand strong{font-size:12px}.brand{gap:7px}.brand img{width:30px;height:30px}main{padding:21px}.session-grid{column-gap:16px}.session-item dd{font-size:12px}.demo-title span{display:none}.demo-controls label{display:none}.guard-strip{gap:11px}.guard-controls{gap:8px}.prototype-footer>span:last-child{font-size:8px}.window{height:calc(100vh - 99px)}}
+    @media(max-width:790px){.sidebar{flex-basis:66px;padding:21px 8px 12px}.school-logo,.brand>div,.nav>span,.campus,.sidebar-note{display:none}.brand{border:0;padding:0 0 27px;justify-content:center}.brand img{height:35px;width:35px}.nav{justify-content:center;padding:14px 0}.nav .icon{width:19px;height:19px}.nav.active:before{top:17px}.sidebar-bottom{padding:0}.session-grid{column-gap:18px}.demo-controls select{width:177px}.page-heading .badge{display:none}main{padding:21px 19px}.session-top,.session-grid{padding-left:17px;padding-right:17px}.session-bottom{padding-left:17px;padding-right:17px}.guard-strip>.icon-tile{display:none}.guard-controls .button{padding:0 10px}.guard-copy p{max-width:245px}.prototype-footer>span:last-child{display:none}.toast{left:50%}.setting-row{gap:15px}}
+    @media(max-width:610px){body{padding:8px}.demo-bar{flex-wrap:wrap;gap:8px;margin-bottom:9px}.demo-title{height:19px}.demo-title strong{font-size:10px}.demo-controls{width:100%;gap:6px}.demo-controls select{flex:1;width:0}.demo-controls .button{padding:0 10px}.window{min-height:620px;height:calc(100vh - 130px);border-radius:9px}.sidebar{flex-basis:55px;padding:17px 5px}.brand img{height:31px;width:31px}.nav{padding:13px 0}.titlebar{padding-left:16px}.titlebar>span{font-size:9px}.window-glyphs{gap:16px;padding:0 13px}main{padding:19px 14px}.page-heading{margin-bottom:15px}h1{font-size:20px}.subtitle{font-size:10px}.session-top{padding:15px 14px 0;align-items:flex-start}.section-title{font-size:12px;gap:7px}.section-title .icon-tile{width:26px;height:26px}.session-kicker{font-size:7px}.session-meta{flex-direction:column;align-items:flex-end;gap:5px}.session-state{font-size:9px}.session-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding:17px 14px;row-gap:17px;column-gap:14px}.session-item dd{font-size:11px}.session-item dd.mono{font-size:11px}.session-item dt{font-size:9px}.session-bottom{padding:10px 14px;align-items:flex-start;gap:8px}.session-bottom>span{display:block;max-width:190px;font-size:8px}.session-bottom>span .icon{display:none}.guard-strip{padding:13px;gap:8px;flex-wrap:wrap}.guard-copy{flex-basis:60%}.guard-copy h2{font-size:11px;gap:5px}.guard-copy h2 span{font-size:8px}.guard-copy p{font-size:9px;max-width:none}.guard-controls{gap:8px;margin-left:auto}.guard-controls .button{height:30px;font-size:10px}.guard-controls .switch{display:none}.check-line{display:block;font-size:8px;line-height:1.9}.check-line>span:last-child{margin-top:2px}.recovery-heading{align-items:flex-start;margin-top:16px;gap:6px}.recovery-title h2{font-size:11px}.recovery-title>span{font-size:8px}.recovery-heading>small{font-size:8px;max-width:105px;text-align:right;line-height:1.7}.recovery-summary{padding:13px;gap:10px}.recovery-total{min-width:60px}.recovery-total strong{font-size:27px}.recovery-summary p{font-size:9px}.recovery-list{padding-left:13px;padding-right:13px}.recovery-row time{font-size:10px}.recovery-row p{font-size:9px}.recovery-row>.badge{display:none}.overview-footnote{font-size:8px}.statusbar{padding:0 12px;font-size:8px}.statusbar>span:last-child{display:none}.pause-banner{padding:11px;gap:8px;flex-wrap:wrap}.pause-banner>.icon{display:none}.pause-banner strong{font-size:10px}.pause-banner p{font-size:9px}.pause-banner .button{height:29px;font-size:10px}.form-card{padding:15px}.form-card-heading{gap:8px}.form-card-heading h2{font-size:12px}.form-card-heading p{font-size:9px}.form-card-heading>.badge{display:none}.form-row{grid-template-columns:1fr;gap:15px;margin-top:16px}.account-picker{gap:6px}.account-picker .button{padding:0 9px;font-size:10px}.active-account-note{align-items:flex-start;font-size:9px}.form-footer{flex-wrap:wrap;gap:10px}.form-footer>span{font-size:9px}.form-footer>div{margin-left:auto}.notice{font-size:9px}.settings-group{padding:0 13px}.setting-row{gap:10px;padding:15px 0}.setting-row h3{font-size:10px}.setting-row p{font-size:9px}.number-control input{width:65px}.schedule-facts{gap:6px}.schedule-facts>div{padding:9px 7px}.schedule-facts dt{font-size:8px}.schedule-facts dd{font-size:10px}.setting-note{font-size:9px}.about-card{padding:16px;gap:12px}.about-card img{height:45px;width:45px}.about-card h2{font-size:14px}.about-card p{font-size:9px}.about-card .badge{font-size:8px}.faq summary{font-size:10px}.faq details p{font-size:9px}.prototype-footer{font-size:8px;margin-top:9px}.soft-note{font-size:9px}.help-note{font-size:9px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <svg class="sprite" aria-hidden="true"><defs>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M3 9a14 14 0 0 1 18 0M6 12a9 9 0 0 1 12 0M9 15a4.5 4.5 0 0 1 6 0"/><circle cx="12" cy="19" r=".6"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 4-4 7-8 9-4-2-8-5-8-9V6z"/><path d="m8 12 3 3 5-6"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="m9 3-1 3-3 1-2 4 2 2v4l4 2 3-1 3 1 4-2v-4l2-2-2-4-3-1-1-3z"/><circle cx="12" cy="11" r="3"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.4 9a2.7 2.7 0 1 1 4.4 2.2c-1.5 1-1.8 1.3-1.8 2.8M12 17h.01"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 8a8 8 0 1 0 0 8M20 3v5h-5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 8v8M15 8v8"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  </defs></svg>
+
+  <div class="demo-bar" aria-label="原型演示控制台">
+    <div class="demo-title"><i aria-hidden="true"></i><strong>WINDOWS / 0.2</strong><span>更新设计 · 可交互原型</span></div>
+    <div class="demo-controls">
+      <label for="demo-scenario">演示场景</label>
+      <select id="demo-scenario" aria-label="选择演示场景">
+        <option value="startup-online">启动即检测 · 当前有网</option>
+        <option value="startup-offline">启动即检测 · 断网后登录</option>
+        <option value="outage">网络中断 → 自动恢复</option>
+        <option value="info-stale">会话获取失败 · 保留旧值</option>
+        <option value="info-empty">会话获取失败 · 无缓存</option>
+        <option value="fail">下一次 HTTP 请求失败</option>
+        <option value="short">1 秒间隔 · 3.2 秒请求</option>
+        <option value="restart-app">重启软件 · 保留本次统计</option>
+        <option value="restart-pc">模拟重启电脑 · 清空统计</option>
+        <option value="duplicate">重复上报同一次恢复</option>
+      </select>
+      <button class="button secondary" id="run-demo">运行场景</button>
+      <button class="button quiet" id="demo-fail" title="每点击一次，模拟一个 HTTP 请求失败">请求失败 +1</button>
+    </div>
+  </div>
+
+  <div class="window">
+    <aside class="sidebar" aria-label="应用导航">
+      <img class="school-logo" src="assets/ouc-logo.svg" alt="中国海洋大学">
+      <div class="brand"><img src="assets/app-icon.svg" alt="" width="33" height="33"><div><strong>海大网络助手</strong><small>OUC NETWORK ASSISTANT</small></div></div>
+      <nav>
+        <button class="nav active" data-page="overview" aria-current="page" title="连接概览"><svg class="icon" aria-hidden="true"><use href="#i-grid"/></svg><span>连接概览</span></button>
+        <button class="nav" data-page="account" title="账号与网络"><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg><span>账号与网络</span></button>
+        <button class="nav" data-page="settings" title="偏好设置"><svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg><span>偏好设置</span></button>
+        <button class="nav" data-page="help" title="帮助与关于"><svg class="icon" aria-hidden="true"><use href="#i-help"/></svg><span>帮助与关于</span></button>
+      </nav>
+      <div class="sidebar-bottom"><div class="campus" role="img" aria-label="中国海洋大学校园"></div><p class="sidebar-note">个人校园网络工具<br>非学校官方软件</p></div>
+    </aside>
+    <div class="workspace">
+      <div class="titlebar"><span>海大网络助手 <span aria-hidden="true"> / </span> Windows 桌面版</span><div class="window-glyphs" aria-hidden="true"><span>−</span><span>□</span><span>×</span></div></div>
+      <main id="main-content">
+        <section class="page active" id="page-overview" aria-labelledby="overview-title">
+          <div class="page-heading"><div><div class="eyebrow">CONNECTION OVERVIEW</div><h1 id="overview-title">连接概览</h1><p class="subtitle">在线信息一目了然，断网恢复留有记录。</p></div><span class="badge">本机 · Windows</span></div>
+          <div class="pause-banner" id="pause-banner" role="alert" hidden><svg class="icon" aria-hidden="true"><use href="#i-pause"/></svg><div><strong>连续 3 次网络请求失败，已停止自动请求</strong><p>检查网络后手动重试。切换页面或重新开启守护会保留暂停状态。</p></div><button class="button secondary" id="retry-request">手动重试</button></div>
+          <article class="surface session-card" aria-labelledby="session-title">
+            <div class="session-top"><div class="section-title"><span class="icon-tile"><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg></span><div><h2 id="session-title" style="font-size:13px;font-weight:600">当前在线会话</h2><div class="session-kicker">XHA.OUC.EDU.CN</div></div></div><div class="session-meta"><span class="status" id="connectivity-pill"><i></i><span>正在检测</span></span><span class="session-state" id="session-state">获取中</span></div></div>
+            <dl class="session-grid" id="session-fields">
+              <div class="session-item"><dt>账号</dt><dd id="session-account">—</dd></div>
+              <div class="session-item"><dt>上线时间</dt><dd class="mono" id="session-online">—</dd></div>
+              <div class="session-item"><dt>源 IP</dt><dd class="mono" id="session-ip">—</dd></div>
+              <div class="session-item"><dt>源 IPV6</dt><dd class="mono" id="session-ipv6">—</dd></div>
+              <div class="session-item"><dt>源 MAC</dt><dd class="mono" id="session-mac">—</dd></div>
+              <div class="session-item"><dt>移动端标识</dt><dd id="session-mobile">—</dd></div>
+            </dl>
+            <div class="session-bottom"><span><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg><span id="session-updated">启动后立即检测，并读取当前会话</span></span><button class="inline-link" id="refresh-session"><svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>刷新信息</button></div>
+          </article>
+          <article class="surface guard-strip" aria-labelledby="guard-title"><span class="icon-tile"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg></span><div class="guard-copy"><h2 id="guard-title">自动守护 <span id="guard-label">已开启</span></h2><p id="guard-description">本轮完成后等待 120 秒，再检查网络。</p></div><div class="guard-controls"><button class="switch on" id="guard-toggle" role="switch" aria-checked="true" aria-label="自动守护"><span></span></button><button class="button primary" id="check-network"><svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg><span>检查并连接</span></button></div></article>
+          <div class="check-line" id="check-line" aria-live="polite"><span id="request-state"><span class="spinner" aria-hidden="true"></span>启动检测中…</span><span class="dev-meter" id="next-check">本轮执行中</span></div>
+          <div class="recovery-heading"><div class="recovery-title"><h2>本次开机恢复记录</h2><span id="boot-badge">当前系统启动周期</span></div><small id="boot-time">开机时间 —</small></div>
+          <article class="surface"><div class="recovery-summary"><div class="recovery-total"><strong id="recovery-count">0</strong><span>次恢复</span></div><p><strong>每一次重新连通，都有迹可循。</strong>仅统计本次开机后，由助手成功解决的网络中断。</p></div><div class="recovery-list" id="recovery-list"><div class="empty"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><div><strong>网络平稳，暂未发生恢复</strong><p>断网恢复后，这里会逐条显示时间、原因与恢复方式。</p></div></div></div></article>
+          <p class="overview-footnote"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>重启软件会保留本次开机记录；再次启动 Windows 后开始新统计。</p>
+        </section>
+
+        <section class="page" id="page-account" aria-labelledby="account-title">
+          <div class="page-heading"><div><div class="eyebrow">ACCOUNT & NETWORK</div><h1 id="account-title">账号与网络</h1><p class="subtitle">先选 Wi-Fi，再选择下次恢复网络时使用的账号。</p></div></div>
+          <div class="surface form-card"><div class="form-card-heading"><span class="icon-tile"><svg class="icon" aria-hidden="true"><use href="#i-wifi"/></svg></span><div><h2>Wi-Fi</h2><p>从 Windows 已保存的无线网络中选择。</p></div><span class="badge">Windows 管理 Wi-Fi 密码</span></div><label class="field wide-field" for="wifi-select">已保存的 Wi-Fi<select id="wifi-select"><option value="OUC-Campus-Demo">OUC-Campus-Demo（已保存）</option><option value="OUC-Library-Demo">OUC-Library-Demo（已保存）</option><option value="OUC-Dorm-Demo">OUC-Dorm-Demo（已保存）</option></select><small id="wifi-note">当前选择：OUC-Campus-Demo · 下次恢复使用此配置</small></label></div>
+          <form class="surface form-card" id="account-form" autocomplete="off"><div class="form-card-heading"><span class="icon-tile"><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg></span><div><h2>校园网账号</h2><p>保存多个账号，按需切换。</p></div><span class="badge" id="saved-account-count">2 个演示账号</span></div><div class="account-picker"><label class="field" for="account-select">下次认证使用<select id="account-select"></select></label><button type="button" class="button secondary" id="add-account"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>新增账号</button></div><div class="form-row"><label class="field" for="account-name">校园网账号<input id="account-name" autocomplete="off" spellcheck="false" maxlength="64" required><small>请使用虚构账号体验此原型。</small></label><label class="field" for="account-password">校园网密码<input id="account-password" type="password" value="" placeholder="********" autocomplete="new-password" maxlength="128"><small id="password-hint">已保存密码 · 留空保留，输入新值后保存可替换。</small></label></div><div class="active-account-note"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg><span id="actual-online-account">当前在线账号：<strong>—</strong></span></div><div class="form-footer"><span id="account-save-state" role="status">密码以固定掩码表示，切换账号后自动显示对应状态。</span><div><button class="button danger" id="delete-account" type="button">删除账号</button><button class="button primary" type="submit">保存账号</button></div></div></form>
+          <div class="notice">交互设计演示：请勿输入真实账号或密码。输入仅供当前页面演示，刷新页面即丢弃；保存操作只保留“已设置密码”状态。</div>
+          <p class="soft-note"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><span>正式版规划：账号密码由 Windows 当前用户加密保存。在线会话展示门户返回的账号；切换已保存账号后，在下一次认证时生效。</span></p>
+        </section>
+
+        <section class="page" id="page-settings" aria-labelledby="settings-title">
+          <div class="page-heading"><div><div class="eyebrow">PREFERENCES</div><h1 id="settings-title">偏好设置</h1><p class="subtitle">按秒设置检查间隔，请求始终逐轮执行。</p></div></div>
+          <h2 class="settings-title">检查与调度</h2><div class="surface settings-group"><div class="setting-row"><div><h3>网络检查间隔</h3><p>本轮全部请求完成后，再等待设定秒数。</p></div><label class="number-control" for="interval-seconds"><input type="number" min="1" step="1" value="120" id="interval-seconds" inputmode="numeric" aria-label="网络检查间隔，秒"><span>秒</span></label></div><div class="setting-note" id="interval-note" aria-live="polite"><strong>当前间隔 120 秒 · 最小 1 秒</strong>采用串行调度，本轮结束后重新计时。</div><dl class="schedule-facts"><div><dt>最近一轮耗时</dt><dd id="last-duration">—</dd></div><div><dt>正在执行的轮次</dt><dd id="active-rounds">1 / 1</dd></div><div><dt>已合并触发</dt><dd id="pending-triggers">0 / 1</dd></div></dl></div>
+          <h2 class="settings-title">启动与窗口</h2><div class="surface settings-group"><div class="setting-row"><div><h3>登录 Windows 后自动运行</h3><p>每次启动立即检测，断网时立即尝试登录。</p></div><button class="switch on" role="switch" aria-checked="true" aria-label="登录 Windows 后自动运行" data-demo-switch><span></span></button></div><div class="setting-row"><div><h3>关闭窗口时收起到托盘</h3><p>主界面关闭后继续后台守护。</p></div><button class="switch on" role="switch" aria-checked="true" aria-label="关闭窗口时收起到托盘" data-demo-switch><span></span></button></div></div>
+          <h2 class="settings-title">请求失败处理</h2><div class="surface settings-group"><div class="setting-row"><div><h3>连续 3 次 HTTP 请求失败后，停止自动请求</h3><p>超时、连接错误和无效响应计为失败；成功响应清零。<br>检测到需要认证，按正常流程继续登录。</p></div><span class="badge">等待手动重试</span></div></div><p class="group-footnote">调度器最多执行一轮。运行中重复触发会合并，完成后清除，随后重新等待设定秒数。暂停状态保留，切换页面或开启守护不会解除。</p>
+        </section>
+
+        <section class="page" id="page-help" aria-labelledby="help-title">
+          <div class="page-heading"><div><div class="eyebrow">HELP & ABOUT</div><h1 id="help-title">帮助与关于</h1><p class="subtitle">连接状态、在线信息与恢复次数，各有明确含义。</p></div></div>
+          <div class="surface about-card"><img src="assets/app-icon.svg" alt="海大网络助手图标" width="57" height="57"><div><h2>海大网络助手</h2><p>Windows 桌面版 · 更新设计 v0.2</p><span class="badge">个人工具 · 非学校官方软件</span></div></div>
+          <div class="faq"><details open><summary>启动后什么时候检测网络？</summary><p>立即执行第一轮，不等待检查间隔。外网可用时读取在线会话；检测到需要认证时，使用已选 Wi-Fi 与校园网账号尝试恢复，复通后刷新在线信息。</p></details><details><summary>为什么外网可用，但在线会话暂不可用？</summary><p>网络连通性与校园网门户信息分别展示。门户读取失败时，有旧数据则注明更新时间和“旧数据”；没有可用数据时显示“暂不可用”。源 IP 等字段以门户实际返回值为准。</p></details><details><summary>什么时候会计入一次网络恢复？</summary><p>同一次中断在助手完成恢复并验证外网可用后计入一次。普通在线检查、失败请求、重复回调均不增加计数。记录跟随当前 Windows 启动周期，重启软件后保留。</p></details><details><summary>请求暂停后怎样恢复？</summary><p>连续三个 HTTP 请求失败后停止所有自动网络请求。可在连接概览中手动重试；成功请求将连续失败数清零。等待、切换页面或切换守护开关都不会解除暂停。</p></details><details><summary>检查间隔太短，会同时发起多轮请求吗？</summary><p>每轮完成后，再等待设定秒数。若最近一轮耗时超过设置间隔，会显示间隔过小提示。任何时刻只有一轮执行，重复触发被合并，无历史触发补发。</p></details><details><summary>如何查看所有更新状态？</summary><p>使用窗口上方的“演示场景”。“请求失败 +1”可逐次查看第一次、第二次与第三次失败；“1 秒间隔”演示 3.2 秒请求的串行调度；重启软件和重启电脑演示恢复记录的生命周期。</p></details></div>
+          <p class="help-note">此原型的所有网络行为均为本页定时模拟。账号和地址为虚构数据；IPv4 使用 192.0.2.0/24，IPv6 使用 2001:db8::/32 文档地址。门户标识用于说明信息来源。</p>
+        </section>
+      </main>
+      <footer class="statusbar"><span><i class="dot" id="footer-dot"></i><span id="footer-status">启动检测中</span></span><span id="footer-network">OUC-Campus-Demo · 演示配置</span><span>离线交互原型 · 模拟数据</span></footer>
+    </div>
+  </div>
+  <div class="prototype-footer"><span>DESIGN 02 / 让在线信息更清楚，让每一次复通有据可查。</span><span>界面评审用 · 无真实网络请求 · 请勿输入真实凭据</span></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script>
+    'use strict';
+    // Deliberately offline. No fetch, XHR, credential persistence, or OS integration.
+    const $ = id => document.getElementById(id);
+    const state = {
+      accounts: [{id:'demo_2026001',hasSecret:true},{id:'demo_2026002',hasSecret:true}],
+      selected:'demo_2026001', wifi:'OUC-Campus-Demo', onlineAccount:'demo_2026001',
+      online:true, connectivityKnown:false, onlineAt:new Date(Date.now()-8*60000), info:'loading', cache:null, updated:null, interval:120,
+      guard:true, paused:false, failures:0, busy:false, pending:0, ignored:0,
+      duration:null, nextDue:null, timer:null, runToken:0, round:0,
+      bootAt:new Date(Date.now()-52*60000), recoveries:[], recoveredIds:new Set(),
+      outageId:null, nextOutage:0, shortDemo:false, lastMessage:'启动检测中…'
+    };
+    let toastTimer;
+    const fieldNames = ['account','online','ip','ipv6','mac','mobile'];
+    function timestamp(date) {
+      const d = new Date(date), pad = value => String(value).padStart(2,'0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+    function toast(message) { $('toast').textContent=message; $('toast').hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>$('toast').hidden=true,4200); }
+    function icon(name) { const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','icon');svg.setAttribute('aria-hidden','true');const use=document.createElementNS('http://www.w3.org/2000/svg','use');use.setAttribute('href',`#i-${name}`);svg.append(use);return svg; }
+    function showPage(page) { document.querySelectorAll('.page').forEach(el=>el.classList.toggle('active',el.id===`page-${page}`));document.querySelectorAll('.nav').forEach(el=>{const active=el.dataset.page===page;el.classList.toggle('active',active);if(active)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});$('main-content').scrollTop=0; }
+    document.querySelectorAll('[data-page]').forEach(button=>button.addEventListener('click',()=>showPage(button.dataset.page)));
+    function captureSession(account=state.onlineAccount) {
+      state.cache={account,online:timestamp(state.onlineAt),ip:'192.0.2.24',ipv6:'2001:db8:4:18::24',mac:'02:00:5E:10:00:24',mobile:'否 · PC'};
+      state.updated=new Date();state.info='ready';
+    }
+    function renderSession() {
+      const labels={loading:'获取中',ready:'已更新',stale:'旧数据',unavailable:'暂不可用'};
+      $('session-state').textContent=labels[state.info];$('session-state').classList.toggle('warn',['stale','unavailable'].includes(state.info));
+      const pill=$('connectivity-pill');pill.className='status'+(!state.connectivityKnown||state.paused||state.failures>0||!state.online?' warn':'');
+      pill.lastElementChild.textContent=!state.connectivityKnown?(state.busy?'正在检测':'状态待确认'):state.paused||state.failures>0?(state.online?'上次检查可用':'状态待确认'):state.busy&&!state.online?'正在恢复':state.online?'外网可用':'外网不可用';
+      $('session-title').textContent=state.cache&&(!state.online||state.info==='stale'||state.paused)?'上次校园网会话':'当前校园网会话';
+      fieldNames.forEach(name=>{const el=$(`session-${name}`);el.textContent=state.cache?state.cache[name]:state.info==='loading'?'正在获取…':'—';el.classList.toggle('loading',!state.cache);});
+      $('session-updated').textContent=state.info==='loading'?(state.cache?'正在刷新 · 仍显示上次采集数据':'正在读取在线会话信息'):state.info==='unavailable'?'门户信息读取失败 · 尚无可用数据':`${state.info==='stale'?'刷新失败 · 上次采集':'采集更新'} ${timestamp(state.updated)}`;
+      $('actual-online-account').replaceChildren();const text=document.createTextNode(state.online?'当前在线账号：':'最近一次在线账号：');const strong=document.createElement('strong');strong.textContent=state.onlineAccount;$('actual-online-account').append(text,strong,document.createTextNode(state.selected!==state.onlineAccount?' · 已选账号将在下次认证时使用':' · 与当前选择一致'));
+    }
+    function renderAccounts() {
+      const select=$('account-select');select.replaceChildren();
+      state.accounts.forEach(account=>{const option=document.createElement('option');option.value=account.id;option.textContent=`${account.id}（${account.hasSecret?'已保存密码':'待设置密码'}）`;select.append(option);});
+      if(!state.selected){const option=document.createElement('option');option.value='';option.textContent='新增虚构账号…';select.append(option);}
+      select.value=state.selected;
+      const account=state.accounts.find(item=>item.id===state.selected);
+      $('account-name').value=account?account.id:'';$('account-password').value='';$('account-password').placeholder=account?.hasSecret?'********':'输入演示密码';
+      $('password-hint').textContent=account?.hasSecret?'已保存密码 · 留空保留，输入新值后保存可替换。':'新增账号需输入一个虚构密码，保存后以固定掩码表示。';
+      $('saved-account-count').textContent=`${state.accounts.length} 个演示账号`;$('delete-account').disabled=!account;
+      renderSession();
+    }
+    function renderRecoveries() {
+      $('recovery-count').textContent=String(state.recoveries.length);$('boot-time').textContent=`开机 ${timestamp(state.bootAt)}`;
+      const list=$('recovery-list');list.replaceChildren();
+      if(!state.recoveries.length){const empty=document.createElement('div');empty.className='empty';empty.append(icon('check'));const copy=document.createElement('div'),title=document.createElement('strong'),p=document.createElement('p');title.textContent='网络平稳，暂未发生恢复';p.textContent='断网恢复后，这里会逐条显示时间、原因与恢复方式。';copy.append(title,p);empty.append(copy);list.append(empty);return;}
+      state.recoveries.slice().reverse().forEach(event=>{const row=document.createElement('div');row.className='recovery-row';const mark=document.createElement('span');mark.className='recovery-mark';mark.append(icon('check'));const copy=document.createElement('div'),time=document.createElement('time'),p=document.createElement('p'),badge=document.createElement('span');time.dateTime=event.at.toISOString();time.textContent=timestamp(event.at);p.textContent=`${event.reason} · ${event.method} · 耗时 ${event.duration.toFixed(1)} 秒 · ${event.account}`;badge.className='badge';badge.textContent='已恢复';copy.append(time,p);row.append(mark,copy,badge);list.append(row);});
+    }
+    function recordRecovery(id,account,duration=state.duration??0) {
+      if(!id||state.recoveredIds.has(id))return false;
+      state.recoveredIds.add(id);state.recoveries.push({id,at:new Date(),reason:'外网不可用',method:'校园网重新认证后验证连通',duration,account});renderRecoveries();return true;
+    }
+    function updateIntervalNote() {
+      const tooShort=state.duration!==null&&state.interval<state.duration;
+      $('interval-note').classList.toggle('warning',tooShort);
+      $('interval-note').replaceChildren();const strong=document.createElement('strong');strong.textContent=tooShort?`间隔过小：设置 ${state.interval} 秒，最近一轮耗时 ${state.duration.toFixed(1)} 秒`:`当前间隔 ${state.interval} 秒 · 最小 1 秒`;
+      $('interval-note').append(strong,document.createTextNode(tooShort?`本轮请求结束后再等待 ${state.interval} 秒。持续串行执行，重复触发不补发。`:'采用串行调度，本轮结束后重新计时。'));
+      $('last-duration').textContent=state.duration===null?'—':`${state.duration.toFixed(1)} 秒`;
+      $('active-rounds').textContent=`${state.busy?1:0} / 1`;$('pending-triggers').textContent=`${state.pending} / 1`;
+    }
+    function renderStatus() {
+      $('pause-banner').hidden=!state.paused;
+      $('guard-toggle').classList.toggle('on',state.guard);$('guard-toggle').setAttribute('aria-checked',String(state.guard));
+      $('guard-label').textContent=state.paused?'请求已暂停':state.guard?'已开启':'已关闭';
+      const tooShort=state.duration!==null&&state.interval<state.duration;
+      $('guard-description').textContent=state.paused?'连续 HTTP 请求失败后，等待你手动重试。':`${tooShort?'间隔过小 · ':''}本轮完成后等待 ${state.interval} 秒，再检查网络。`;
+      $('check-line').classList.toggle('warn',state.failures>0||state.paused||tooShort);
+      $('request-state').replaceChildren();if(state.busy){const spinner=document.createElement('span');spinner.className='spinner';spinner.setAttribute('aria-hidden','true');$('request-state').append(spinner);}else{const dot=document.createElement('i');dot.className='dot';$('request-state').append(dot);}
+      $('request-state').append(document.createTextNode(state.lastMessage));
+      $('check-network').disabled=state.paused;$('refresh-session').disabled=state.paused;$('retry-request').disabled=state.busy;
+      ['account-select','account-name','account-password','add-account','wifi-select'].forEach(id=>$(id).disabled=state.busy);
+      $('delete-account').disabled=state.busy||!state.accounts.some(account=>account.id===state.selected);
+      document.querySelectorAll('#account-form button[type="submit"]').forEach(button=>button.disabled=state.busy);
+      $('footer-dot').classList.toggle('warn',state.paused||!state.online);
+      $('footer-status').textContent=state.paused?'自动请求已暂停 · 等待手动重试':state.busy?'正在执行 · 同时最多一轮':state.guard?'自动守护运行中':'自动守护已关闭';
+      $('footer-network').textContent=`${state.wifi} · 演示配置`;
+      updateIntervalNote();renderCountdown();
+    }
+    function renderCountdown() {
+      $('next-check').textContent=state.paused?'自动请求已停止':state.busy?`本轮执行中${state.pending?' · 重复触发已合并':''}`:!state.guard?'自动检查已关闭':state.nextDue?`下次检查 ${Math.max(0,Math.ceil((state.nextDue-Date.now())/1000))} 秒后`:'准备下一轮';
+    }
+    function cancelScheduled() { clearTimeout(state.timer);state.timer=null;state.nextDue=null; }
+    function schedule() {
+      cancelScheduled();if(state.paused||!state.guard||state.busy)return;
+      state.nextDue=Date.now()+state.interval*1000;
+      const waitForDue=()=>{if(state.paused||!state.guard)return;const remaining=state.nextDue-Date.now();if(remaining>0)state.timer=setTimeout(waitForDue,Math.min(remaining,2147483647));else runRound('自动检查');};
+      state.timer=setTimeout(waitForDue,Math.min(state.interval*1000,2147483647));renderCountdown();
+    }
+    function successfulHttp() { state.failures=0; }
+    function failedHttp() { state.failures=Math.min(3,state.failures+1);if(state.failures===3){state.paused=true;cancelScheduled();} }
+    async function runRound(source,options={}) {
+      if(state.paused&&!options.retry){toast('自动请求已停止，请在暂停提示中选择“手动重试”。');return;}
+      if(state.busy){state.pending=1;state.ignored++;renderStatus();toast('本轮仍在执行：触发已合并，完成后重新计时，不补发请求。');return;}
+      if(options.retry)state.paused=false;
+      cancelScheduled();state.busy=true;state.pending=0;state.ignored=0;
+      const token=++state.runToken,started=performance.now(),round=++state.round;
+      const selected=state.accounts.find(account=>account.id===state.selected&&account.hasSecret)?.id??null;
+      const failed=Boolean(options.fail),wasOffline=!state.online;
+      const duration=options.duration??(state.shortDemo?3200:failed?900:wasOffline?2200:800);
+      if(wasOffline&&!state.outageId)state.outageId=`outage-${++state.nextOutage}`;
+      const outage=state.outageId;
+      state.lastMessage=failed?`${source} · 第 ${round} 轮 · 等待模拟 HTTP 响应…`:`${source} · ${wasOffline?(selected?'检测到需认证，正在登录…':'正在检测外网，尚无有效校园网账号…'):'正在检测外网…'}`;
+      if(!failed){state.info='loading';}
+      renderSession();renderStatus();
+      // For the short-interval demonstration only, synthesize repeated timer/event
+      // triggers while the single round is busy. They never start an extra round.
+      if(options.gateDemo){[1000,1900].forEach(delay=>setTimeout(()=>{if(state.runToken===token&&state.busy)runRound('重复触发');},delay));}
+      await new Promise(resolve=>setTimeout(resolve,duration));if(token!==state.runToken)return;
+      if(failed){failedHttp();state.info=state.cache?'stale':'unavailable';state.lastMessage=state.paused?'连续 3 次 HTTP 请求失败 · 自动请求已停止':`HTTP 请求失败 ${state.failures} / 3 · ${state.failures===1?'首次':'连续第二次'}失败，尚未暂停`;}
+      else {
+        successfulHttp();state.connectivityKnown=true;
+        if(wasOffline&&!selected){
+          state.online=false;state.info=state.cache?'stale':'unavailable';state.lastMessage='检测到需认证 · 请先添加校园网账号并保存密码';
+        } else {
+          state.online=true;
+          if(wasOffline){state.onlineAccount=selected;state.onlineAt=new Date();const added=recordRecovery(outage,selected,(performance.now()-started)/1000);state.outageId=null;state.lastMessage=added?'校园网认证成功 · 外网已恢复 · 已记录本次恢复':'外网可用 · 同一次恢复已记录';}
+          else state.lastMessage='外网可用 · 无需认证 · 本轮检查完成';
+          if(options.infoFail){failedHttp();state.info=state.cache?'stale':'unavailable';state.lastMessage='外网可用 · 会话 HTTP 请求失败 1 / 3';}
+          else captureSession();
+        }
+      }
+      state.busy=false;state.pending=0;state.duration=(performance.now()-started)/1000;
+      if(state.ignored)state.lastMessage+=` · 已合并 ${state.ignored} 次触发，无补发`;
+      renderSession();renderStatus();schedule();
+    }
+    function restartApp(computer=false,offline=false) {
+      cancelScheduled();state.runToken++;state.busy=false;state.pending=0;
+      if(computer){state.bootAt=new Date();state.recoveries=[];state.recoveredIds.clear();state.outageId=null;state.nextOutage=0;renderRecoveries();}
+      if(offline){state.online=false;state.outageId=`outage-${++state.nextOutage}`;}
+      if(state.paused){state.lastMessage='软件已重启 · 保留暂停状态 · 等待手动重试';renderSession();renderStatus();toast('软件已启动；连续失败暂停状态仍然保留。');return;}
+      state.info='loading';state.connectivityKnown=false;runRound(computer?'系统启动 · 立即检测':'软件启动 · 立即检测');
+    }
+    $('guard-toggle').addEventListener('click',()=>{state.guard=!state.guard;cancelScheduled();if(state.paused)toast('守护开关已更新；请求暂停状态保留，需手动重试。');else if(state.guard)schedule();renderStatus();});
+    $('check-network').addEventListener('click',()=>runRound('手动检查'));
+    $('refresh-session').addEventListener('click',()=>runRound('刷新在线信息'));
+    $('retry-request').addEventListener('click',()=>runRound('手动重试',{retry:true}));
+    $('demo-fail').addEventListener('click',()=>{showPage('overview');runRound('请求失败演示',{fail:true});});
+    $('account-select').addEventListener('change',()=>{state.selected=$('account-select').value;renderAccounts();$('account-save-state').textContent='已切换下次认证账号。';});
+    $('add-account').addEventListener('click',()=>{state.selected='';renderAccounts();$('account-save-state').textContent='正在新增：请输入虚构账号和演示密码。';$('account-name').focus();});
+    $('account-form').addEventListener('submit',event=>{
+      event.preventDefault();const id=$('account-name').value.trim(),hasInput=$('account-password').value.length>0;
+      if(!id){$('account-name').focus();return;}
+      const current=state.accounts.find(item=>item.id===state.selected),duplicate=state.accounts.find(item=>item.id===id&&item!==current);
+      if(duplicate){toast('该演示账号已存在，请从下拉框选择。');return;}
+      if(!current&&!hasInput){toast('新增账号请输入一个虚构密码。');$('account-password').focus();return;}
+      if(current){current.id=id;current.hasSecret=current.hasSecret||hasInput;}else state.accounts.push({id,hasSecret:true});
+      state.selected=id;renderAccounts();$('account-save-state').textContent=hasInput?'账号已保存 · 演示密码输入已清空，以固定掩码显示。':'账号已保存 · 保留原有密码状态。';toast('演示配置已更新，仅在当前页面有效。');
+    });
+    $('delete-account').addEventListener('click',()=>{const id=state.selected;state.accounts=state.accounts.filter(item=>item.id!==id);state.selected=state.accounts[0]?.id||'';renderAccounts();$('account-save-state').textContent='已删除所选演示账号。';toast('所选账号已删除，当前在线会话继续显示门户信息。');});
+    $('wifi-select').addEventListener('change',()=>{state.wifi=$('wifi-select').value;$('wifi-note').textContent=`当前选择：${state.wifi} · 下次恢复使用此配置`;renderStatus();});
+    $('interval-seconds').addEventListener('change',()=>{
+      const input=$('interval-seconds'),value=Number(input.value);
+      if(!Number.isSafeInteger(value)||value<1){input.value=state.interval;toast('请输入大于等于 1 的整数秒数。');return;}
+      state.interval=value;renderStatus();if(!state.busy)schedule();
+    });
+    document.querySelectorAll('[data-demo-switch]').forEach(button=>button.addEventListener('click',()=>{const enabled=button.getAttribute('aria-checked')!=='true';button.setAttribute('aria-checked',String(enabled));button.classList.toggle('on',enabled);toast('原型偏好已更新，仅演示界面状态。');}));
+    $('run-demo').addEventListener('click',()=>{
+      const scenario=$('demo-scenario').value;
+      if(scenario==='restart-app'){restartApp();toast('软件重启演示：本次开机恢复次数与记录已保留。');return;}
+      if(scenario==='restart-pc'){restartApp(true);toast('电脑重启演示：已开始新的系统启动周期，恢复统计清零。');return;}
+      if(scenario==='duplicate'){
+        const recent=state.recoveries.at(-1);if(recent){recordRecovery(recent.id,recent.account);toast('重复恢复事件已去重，恢复次数保持不变。');}else toast('请先模拟一次网络中断与恢复，再验证重复事件去重。');return;
+      }
+      if(state.busy){runRound('场景触发');return;}
+      showPage('overview');
+      if(scenario==='startup-online'){state.online=true;restartApp();}
+      if(scenario==='startup-offline'){restartApp(false,true);}
+      if(scenario==='outage'){if(state.paused){toast('请求已暂停，请先手动重试。');return;}state.online=false;state.outageId=`outage-${++state.nextOutage}`;runRound('网络变化 · 立即恢复');}
+      if(scenario==='info-stale'){if(!state.cache)captureSession();runRound('会话刷新演示',{infoFail:true});}
+      if(scenario==='info-empty'){state.cache=null;state.updated=null;runRound('首次会话读取演示',{infoFail:true});}
+      if(scenario==='fail')runRound('请求失败演示',{fail:true});
+      if(scenario==='short'){state.interval=1;state.shortDemo=true;$('interval-seconds').value='1';runRound('过短间隔演示',{duration:3200,gateDemo:true});toast('设置为 1 秒，模拟请求耗时 3.2 秒；执行中触发将合并。');}
+    });
+    // A local-only test hook for review: immutable snapshots contain no input values.
+    window.prototypeState=()=>({busy:state.busy,pending:state.pending,paused:state.paused,failures:state.failures,interval:state.interval,info:state.info,recoveries:state.recoveries.length,selected:state.selected,onlineAccount:state.onlineAccount,round:state.round,guard:state.guard});
+    renderAccounts();renderRecoveries();renderStatus();runRound('软件启动 · 立即检测');
+    setInterval(renderCountdown,500);
+  </script>
+</body>
+</html>

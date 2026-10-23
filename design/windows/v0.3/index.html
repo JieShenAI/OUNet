@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; img-src 'self' file: data:; style-src 'self'; script-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>OUNet · Windows v0.3 设计预览</title>
+<link rel="icon" href="../../ounet/ounet-desktop.png"><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="reviewbar"><span><b>DESIGN PREVIEW</b><span class="review-text">Windows v0.3 · 全部为虚构数据</span></span><div><label for="scene">演示场景</label><select id="scene"><option value="online">正常联网 · 已有快照</option><option value="unread">首次联网 · 身份未读取</option><option value="password">密码错误</option><option value="paused">连续三次失败 · 暂停</option><option value="noncampus">XHA 不可达</option><option value="offline">校园网断开 · 待恢复</option></select><button id="theme" aria-label="切换深浅色">◐</button><select id="preview-width" aria-label="预览窗口宽度"><option value="auto">自适应宽度</option><option value="1200">1200</option><option value="1008">1008</option><option value="820">820</option><option value="640">640</option></select></div></div>
+<div class="window" id="app">
+  <header class="titlebar"><span><img src="../../ounet/ounet-desktop.png" alt="">OUNet <span class="version">Windows · 界面设计稿</span></span><div class="window-glyphs" aria-hidden="true">—　 □　 ×</div></header>
+  <div class="workspace">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><img src="../../ounet/ounet-desktop.png" alt="OUNet 图标"><div><strong>OUNet</strong><span>校园网络助手</span></div></div>
+      <div class="nav-caption">工作空间</div>
+      <nav aria-label="主导航">
+        <button class="nav active" data-page="overview" aria-current="page" title="连接概览"><svg><use href="#i-overview"/></svg><span>连接概览</span></button>
+        <button class="nav" data-page="accounts" title="账号管理"><svg><use href="#i-user"/></svg><span>账号管理</span></button>
+        <button class="nav" data-page="settings" title="偏好设置"><svg><use href="#i-settings"/></svg><span>偏好设置</span></button>
+        <button class="nav" data-page="help" title="帮助与关于"><svg><use href="#i-help"/></svg><span>帮助与关于</span></button>
+      </nav>
+      <div class="sidebar-bottom"><div class="local-mark"><span class="dot"></span><span>在你的电脑上运行</span></div><p>免费软件，仅用于学习交流</p><span>OUNet · 独立开发</span></div>
+    </aside>
+    <div class="main-shell">
+      <div class="networkbar"><div><button id="nav-toggle" aria-label="打开导航">☰</button><svg><use href="#i-wifi"/></svg><span id="network-name">OUC-Campus-Demo</span><span class="network-type">Wi-Fi · 当前连接</span></div><button class="text-button" data-action="network">网络设置 <span>↗</span></button></div>
+      <main id="main" tabindex="-1">
+        <div class="page-heading"><div><div class="eyebrow">YOUR CAMPUS, CONNECTED</div><h1 id="page-title">连接概览</h1><p id="page-subtitle">连接状态、在线身份与恢复记录，清楚呈现。</p></div><span class="date">10 月 23 日，星期五</span></div>
+        <div id="banner" hidden role="status"></div>
+        <section id="overview" class="page">
+          <div class="overview-grid">
+            <article class="card session-card">
+              <div class="card-heading"><h2><svg><use href="#i-network"/></svg>校园网会话</h2><span id="connection-badge" class="badge success"><span class="dot"></span>外网可用</span></div>
+              <div class="session-intro"><span class="small-label">当前在线身份</span><strong id="identity">demo_2026001</strong><span id="identity-note">来自 XHA 上次实际读取的信息</span></div>
+              <div class="fields" id="session-fields">
+                <div><span>账号</span><p id="field-account">demo_2026001</p></div><div><span>上线时间</span><p id="field-since">2026-10-23 08:42:16</p></div><div><span>移动端标识</span><p id="field-mobile">PC 端（0）</p></div><div><span>源 IPv4</span><p class="mono" id="field-ip">192.0.2.18</p></div><div><span>源 IPv6</span><p class="mono" id="field-ipv6">2001:db8:85a3::8a2e:370:7334</p></div><div><span>源 MAC</span><p class="mono" id="field-mac">02:00:5E:10:00:18</p></div>
+              </div>
+              <div class="session-footer"><span id="fetched">上次读取 12:20:08 · 当前连接</span><button class="text-button" id="refresh-session"><svg><use href="#i-refresh"/></svg>刷新信息</button></div>
+              <button class="device-link" id="devices"><svg><use href="#i-devices"/></svg><span>查看在线设备</span><span>→</span></button>
+            </article>
+            <aside class="operations">
+              <article class="card monitor-card"><div class="card-heading"><h2>自动监测</h2><button class="switch on" id="monitor" role="switch" aria-checked="true" aria-label="自动监测"></button></div><p id="monitor-description">守护当前连接，断网后按需认证。</p><div class="monitor-visual"><svg><use href="#i-shield"/></svg><span id="monitor-state">监测已开启</span></div><dl class="mini-details"><div><dt>检测间隔</dt><dd id="interval-summary">完成后等待 1 秒</dd></div><div><dt>上次检测</dt><dd>12:26:32</dd></div><div><dt>本轮耗时</dt><dd>0.24 秒</dd></div></dl><button class="text-button" data-action="settings">调整检测间隔 →</button></article>
+              <article class="card action-card"><label for="active-account">下次认证使用账号</label><select id="active-account"><option value="demo_2026001">常用账号 · demo_2026001</option><option value="demo_2026002">备用账号 · demo_2026002</option></select><p id="account-note">切换账号后，在需要认证时使用。</p><button class="primary wide" id="reconnect"><svg><use href="#i-refresh"/></svg><span>重新检测并连接</span></button><span class="action-footnote" id="action-note">主动查询 XHA；已在线时不重复登录。</span></article>
+            </aside>
+            <article class="card recovery-card"><div class="card-heading"><div><h2>本次开机恢复</h2><p>开机于今天 08:30 · 同一故障只计一次</p></div><div class="count"><b id="recovery-count">2</b><span>次协助恢复</span></div></div><div class="timeline" id="timeline"><div class="event"><span class="event-dot"></span><time>11:48:06</time><div><strong>校园网认证恢复</strong><span>外网稳定复检通过</span></div><span class="duration">3.2 秒</span></div><div class="event"><span class="event-dot"></span><time>09:16:24</time><div><strong>校园网认证恢复</strong><span>外网稳定复检通过</span></div><span class="duration">2.8 秒</span></div></div><button class="text-button" id="expand-recovery">展开恢复详情 <span>↓</span></button><div id="recovery-details" hidden>记录归属本次电脑开机；重开 OUNet 不清零。网络自行恢复和重复检测不计入协助恢复。</div></article>
+            <article class="card stats-card"><div><h2>XHA 调用统计</h2><p>仅统计实际派发的校园网请求尝试，含失败。</p></div><div class="stats"><div><strong id="process-requests">12</strong><span>本次进程</span></div><div><strong id="recent-requests">0</strong><span>最近 60 秒</span></div></div><div class="stats-note">进程始于 08:42:00 · 公共探测不计入 · 当前联网监测不访问 XHA</div></article>
+          </div>
+        </section>
+        <section id="accounts" class="page" hidden>
+          <div class="section-toolbar"><span class="small-label">本机保存的账号 · 密码经 Windows 当前用户加密</span><button class="primary" id="add-account">＋ 添加账号</button></div>
+          <div class="accounts-grid"><article class="card account-list"><h2>保存的账号</h2><div id="account-list"></div><div class="inset-note">当前在线身份以 XHA 返回为准，选用账号只影响下次认证。</div></article><article class="card"><div class="card-heading"><h2 id="editor-heading">账号详情</h2><span class="badge">仅保存在本机</span></div><form id="account-form" autocomplete="off"><label for="edit-label">备注</label><input id="edit-label" value="常用账号" maxlength="30"><label for="edit-user">校园网账号</label><input id="edit-user" value="demo_2026001" maxlength="128" required><label for="edit-password">密码 <span class="saved-text">已加密保存</span></label><input id="edit-password" type="password" placeholder="********" autocomplete="new-password" maxlength="128"><p class="field-help">留空保留已存密码。设计稿仅用于演示，请勿输入真实凭据。</p><div id="editor-error" class="form-error" role="status"></div><div class="editor-actions"><button class="primary" type="submit">保存修改</button><button type="button" id="use-account">用于下次认证</button><button class="danger-text" type="button" id="delete-account">删除账号</button></div></form></article></div>
+        </section>
+        <section id="settings" class="page" hidden>
+          <article class="card settings-card"><h2>连接</h2><div class="setting-row"><div><strong>检测间隔</strong><p>每轮完成后再等待；请求始终串行。</p></div><div class="interval-input"><input id="interval" type="number" value="1" min="0.3" max="2147483" step="0.001" aria-label="检测间隔秒数"><span>秒</span><button id="apply-interval">应用</button></div></div><div class="presets"><span>快速选择</span><button data-interval="0.3">0.3 秒</button><button data-interval="1">1 秒 · 推荐</button><button data-interval="3">3 秒</button><button data-interval="10">10 秒</button></div><p id="interval-feedback" class="field-help" role="status">支持 0.3–2147483 秒，最多三位小数；升级保留原设置。</p></article>
+          <article class="card settings-card"><h2>Windows 行为</h2><div class="setting-row"><div><strong>登录 Windows 后启动</strong><p>登录桌面后开始工作，沿用自动监测选择。</p></div><button class="switch" data-switch role="switch" aria-checked="false" aria-label="登录 Windows 后启动"></button></div><div class="setting-row"><div><strong>关闭窗口时留在托盘</strong><p>在托盘右键菜单中退出 OUNet。</p></div><button class="switch on" data-switch role="switch" aria-checked="true" aria-label="关闭到托盘"></button></div><div class="setting-row"><div><strong>重要状态通知</strong><p>密码错误、请求暂停等新事件只提醒一次。</p></div><button class="switch on" data-switch role="switch" aria-checked="true" aria-label="重要状态通知"></button></div></article>
+          <article class="card settings-card"><h2>外观与兼容</h2><div class="setting-row"><div><strong>外观</strong><p>色彩与间距保持一致，适应不同桌面。</p></div><select id="appearance" aria-label="外观"><option value="light">浅色</option><option value="dark">深色</option><option value="system">跟随系统</option></select></div><div class="setting-row"><div><strong>网络名称与权限</strong><p>SSID 不可见时查看具体原因，名称缺失不等于无网络。</p></div><button data-action="permissions">查看说明</button></div><div class="setting-row"><div><strong>旧脚本迁移</strong><p>仅核对本项目的旧入口，保留原暂停状态。</p></div><button data-action="migration">查看迁移说明</button></div></article>
+        </section>
+        <section id="help" class="page" hidden>
+          <div class="help-brand card"><img src="../../ounet/ounet-desktop.png" alt="OUNet"><div><h2>OUNet</h2><p>校园网络助手 · Windows</p><span>v0.3 设计提案，当前实际版本为 0.2.0</span></div><span class="badge">独立开发</span></div>
+          <article class="card help-card"><h2>遇到问题</h2><button class="help-row" id="diagnostics"><span><strong>诊断记录</strong><small>最新在前，按阶段查看检测与认证结果</small></span><span>→</span></button><button class="help-row" data-action="export"><span><strong>导出脱敏排障信息</strong><small>先查看脱敏范围，再由用户选择保存位置</small></span><span>→</span></button></article>
+          <article class="card help-card"><h2>了解 OUNet</h2><button class="help-row" data-action="intro"><span>软件介绍</span><span>→</span></button><button class="help-row" data-action="privacy"><span>数据使用说明</span><span>→</span></button><button class="help-row" data-action="copyright"><span>版权与第三方许可</span><span>→</span></button><button class="help-row" data-action="update"><span><strong>检查 Windows 更新</strong><small>手动检查版本，使用浏览器下载安装包</small></span><span>↗</span></button></article><div class="about-note">免费软件，仅用于学习交流。<br>JShen 保留所有权利 · 非学校官方软件</div>
+        </section>
+      </main>
+      <footer class="statusbar"><span><span class="dot" id="footer-dot"></span><span id="footer-status">自动监测运行中</span></span><span>本地保存 · HTTPS 认证 <span class="status-divider">│</span> 所有内容为演示</span></footer>
+    </div>
+  </div>
+  <div id="toast" role="status" hidden></div>
+</div>
+<dialog id="drawer"><div class="drawer-heading"><div><span class="eyebrow" id="drawer-eyebrow">DETAILS</span><h2 id="drawer-title">在线设备</h2></div><button id="close-drawer" aria-label="关闭详情">×</button></div><div id="drawer-content"></div></dialog>
+<svg class="svg-definitions" xmlns="http://www.w3.org/2000/svg"><defs>
+<symbol id="i-overview" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="9" cy="18" r="2"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 5 2c-1 1-2 1-2 3m0 3h.01"/></symbol>
+<symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2 8a16 16 0 0 1 20 0M5 12a11 11 0 0 1 14 0M8.5 16a6 6 0 0 1 7 0"/><circle cx="12" cy="20" r=".7"/></symbol>
+<symbol id="i-network" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="7" rx="1.5"/><path d="M12 9v5M4 18v-4h16v4"/><rect x="1" y="18" width="6" height="4" rx="1"/><rect x="9" y="18" width="6" height="4" rx="1"/><rect x="17" y="18" width="6" height="4" rx="1"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 8a8 8 0 1 0 .5 6M20 3v5h-5"/></symbol>
+<symbol id="i-devices" viewBox="0 0 24 24"><rect x="2" y="3" width="15" height="12" rx="2"/><path d="M6 20h7M9 15v5"/><rect x="16" y="10" width="6" height="11" rx="1"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6l9-4Z"/><path d="m8 12 3 3 5-6"/></symbol>
+</defs></svg>
+<script src="app.js"></script>
+</body></html>
