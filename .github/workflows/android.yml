@@ -96,10 +96,14 @@ jobs:
         if: inputs.variant == 'release'
         working-directory: android
         run: |
-          python release_metadata.py --apk "dist/OUNet-${{ steps.package.outputs.version }}-release.apk" --apk-info app/build/outputs/apk/release/output-metadata.json --apksigner "$ANDROID_HOME/build-tools/35.0.0/apksigner" --notes ../docs/ANDROID_V1_3_4_RELEASE_NOTES.md
+          version='${{ steps.package.outputs.version }}'
+          python release_metadata.py --apk "dist/OUNet-$version-release.apk" --apk-info app/build/outputs/apk/release/output-metadata.json --apksigner "$ANDROID_HOME/build-tools/35.0.0/apksigner" --notes "../docs/ANDROID_V${version//./_}_RELEASE_NOTES.md"
+          python ../tools/release_bundle.py --platform android --version "$version" --checks-passed
       - uses: actions/upload-artifact@v4
         with:
           name: OUNet-${{ steps.package.outputs.version }}-${{ inputs.variant }}
-          path: android/dist/*
+          path: |
+            dist/releases/android-v${{ steps.package.outputs.version }}/*
+            android/dist/OUNet-${{ steps.package.outputs.version }}-debug.apk*
           if-no-files-found: error
           retention-days: 14

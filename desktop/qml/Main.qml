@@ -159,8 +159,11 @@ ApplicationWindow {
                     AppText {visible:root.detailKey==="diagnostics"&&!root.logEntries.length;text:"暂无本地诊断记录。";color:Theme.muted;Layout.leftMargin:22}
                     AppButton {visible:root.detailKey==="export";text:"选择位置并导出";enabled:!v.busy;Layout.leftMargin:22;onClicked:Backend.exportLogs()}
                     AppText {visible:root.detailKey==="update";text:root.v.updateInfo.message||"正在检查…";Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}
+                    AppText {visible:root.detailKey==="update"&&!!root.v.updateInfo.checkedAt;text:"检查时间："+(root.v.updateInfo.checkedAt||"");font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}
                     CopyText {visible:root.detailKey==="update"&&!!root.v.updateInfo.sha256;text:"版本："+(root.v.updateInfo.version||"")+"\nSHA-256："+(root.v.updateInfo.sha256||"")+"\n"+(root.v.updateInfo.notes||"");font.pixelSize:12;Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}
                     AppButton {visible:root.detailKey==="update"&&!!root.v.updateInfo.newer;text:"在浏览器下载安装包 ↗";enabled:!v.blocked;Layout.leftMargin:22;onClicked:Backend.openUpdate()}
+                    AppText {visible:root.detailKey==="update";text:"来源：GitHub · JieShenAI/OUNet\n下载完成后退出主窗口和托盘进程，再运行安装器。SHA-256 为发布文件摘要，应用不会自动安装。";font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}
+                    AppButton {visible:root.detailKey==="update";text:"GitHub 下载页 ↗";quiet:true;Layout.leftMargin:22;onClicked:Backend.openProjectLink("releases")}
                     AppText {visible:v.status==="error"||v.blocked;text:v.blocked?v.pauseMessage:v.message;color:Theme.amber;font.pixelSize:12;Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}
                     Item {height:20;Layout.fillWidth:true}
                 }

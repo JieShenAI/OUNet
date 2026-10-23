@@ -2,7 +2,14 @@
 
 Android 与 Windows 分别使用 `android-vX.Y.Z` 和 `windows-vX.Y.Z` 标签。
 
-## Unreleased
+## Android 1.3.5 / Windows 0.3.1（发布准备）
+
+- 新增联系作者、邮箱复制、系统邮件、开源地址和 GitHub 下载页。
+- 完善本平台更新检查的分页、附件一致性、重复字段、失败状态与冷却。
+- 新增 Windows 免安装 ZIP、精确资产清单及可验证的 GitHub 草稿发布流程。
+- [实施验证与待验收范围](docs/RELEASE_UPDATE_VERIFICATION.md)。
+
+## 仓库迁移记录
 
 - 将校园网相关源码从 `JieShenAI/tools` 拆分为独立 OUNet 仓库。
 - 统一 MIT 许可证，补齐贡献指南、凭据说明、问题模板、PR 模板和持续集成。

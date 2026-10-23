@@ -1,6 +1,8 @@
 # OUNet Android 使用与构建
 
-当前版本1.3.4，versionCode 8，最低Android 9。免费软件，供学习交流与使用。本次更新见[1.3.4说明](ANDROID_V1_3_4_RELEASE_NOTES.md)与[实施验证](ANDROID_V1_3_4_FIX_VERIFICATION.md)，此前记录见[1.3.3交付](ANDROID_V1_3_3_FIX_VERIFICATION.md)。
+当前版本1.3.5，versionCode 9，最低Android 9。免费软件，供学习交流与使用。本次更新见[1.3.4说明](ANDROID_V1_3_4_RELEASE_NOTES.md)与[实施验证](ANDROID_V1_3_4_FIX_VERIFICATION.md)，此前记录见[1.3.3交付](ANDROID_V1_3_3_FIX_VERIFICATION.md)。
+
+1.3.5 新增设置中的联系作者（shencv@163.com）、开源项目和 GitHub 下载入口，支持复制与系统邮件应用。版本检查完善见[本轮发布说明](ANDROID_V1_3_5_RELEASE_NOTES.md)与[实施、发布及待验收记录](RELEASE_UPDATE_VERIFICATION.md)。
 
 ## 安装与启动
 

@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="about_ounet">关于 OUNet</string>
+    <string name="contact_author">联系作者</string>
+    <string name="send_email">发送邮件</string>
+    <string name="copy_email">复制邮箱</string>
+    <string name="open_project">打开开源项目</string>
+    <string name="copy_project">复制开源地址</string>
+    <string name="open_releases">GitHub 下载页</string>
+    <string name="copy_releases">复制下载页地址</string>
+    <string name="copied">已复制</string>
+    <string name="email_unavailable">未能打开邮件应用，可复制邮箱后联系作者</string>
+    <string name="browser_unavailable">未能打开浏览器，可复制地址后访问</string>
     <string name="free_notice">免费软件，仅用于学习交流</string>
     <string name="monitor_summary">每%1$s秒本地评估 · %2$s</string>
     <string name="seconds_text">%1$s秒</string>

@@ -26,12 +26,20 @@ def main():
     certs = re.findall(r"Signer #\d+ certificate SHA-256 digest:\s*([a-fA-F0-9]{64})", result.stdout)
     if certs != [CERT]:
         raise SystemExit("Signing certificate differs from the original production APK")
+    aapt = args.apksigner.parent / ('aapt.exe' if (args.apksigner.parent / 'aapt.exe').exists() else 'aapt')
+    badging = subprocess.run([str(aapt), 'dump', 'badging', str(args.apk)], check=True, capture_output=True, text=True, encoding='utf-8', errors='replace').stdout
+    package = re.search(r"package: name='([^']+)' versionCode='([^']+)' versionName='([^']+)'", badging)
+    sdk = re.search(r"sdkVersion:'([0-9]+)'", badging)
+    if not package or not sdk or package.groups() != (info['applicationId'], str(item['versionCode']), version) or int(sdk.group(1)) != 28:
+        raise SystemExit('Actual APK package, version or minimum SDK differs from build metadata')
+    if args.apk.name != f'OUNet-{version}-release.apk':
+        raise SystemExit('Unexpected public APK filename')
     tag = f"android-v{version}"
     repo = "https://github.com/JieShenAI/OUNet"
     notes = args.notes.read_text(encoding="utf-8")
     metadata = {
         "applicationId": info["applicationId"], "versionCode": item["versionCode"],
-        "versionName": version, "minSdk": 28,
+        "versionName": version, "minSdk": int(sdk.group(1)),
         "releaseUrl": f"{repo}/releases/tag/{tag}",
         "apkUrl": f"{repo}/releases/download/{tag}/{args.apk.name}",
         "sha256": hashlib.sha256(args.apk.read_bytes()).hexdigest(),
@@ -44,6 +52,7 @@ def main():
     if args.apk.resolve() != legacy.resolve():
         shutil.copyfile(args.apk, legacy)
     digest = metadata["sha256"]
+    args.apk.with_suffix('.apk.sha256').write_text(f'{digest}  {args.apk.name}\n', encoding='ascii')
     legacy.with_suffix(".apk.sha256").write_text(f"{digest}  {legacy.name}\n", encoding="ascii")
     metadata["apkUrl"] = f"{repo}/releases/download/{tag}/{legacy.name}"
     (output / "android-update.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

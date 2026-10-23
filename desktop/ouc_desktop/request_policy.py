@@ -27,6 +27,11 @@ class RequestFailure(RuntimeError):
     pass
 
 
+class HttpStatusFailure(ValueError):
+    """A safe service message which settles the actual request as failed."""
+    pass
+
+
 class RequestStats:
     """Process scope, monotonic rolling window. Count dispatch, including errors."""
     def __init__(self, clock=time.monotonic):
@@ -146,24 +151,34 @@ class RequestClient:
         self.session.mount("https://", adapter or HTTPAdapter(max_retries=0))
         self.session.mount("http://", adapter or HTTPAdapter(max_retries=0))
 
-    def get(self, url, stage, decoder=lambda text, response: text, params=None, probe=False, headers=None, accept_redirect=False):
+    def get(self, url, stage, decoder=lambda text, response: text, params=None, probe=False, headers=None, accept_redirect=False, deadline=None):
         self.policy.before_request()
         if self.cancel.is_set():
             raise RequestsPaused("当前检查已停止。")
         if self.network_guard and not self.network_guard():
             raise RequestsPaused("连接接口已经变化，本轮结果已丢弃。")
         try:
+            timeout = self.timeout
+            if deadline is not None:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0: raise requests.Timeout()
+                timeout = min(timeout, remaining)
             headers = dict(headers or {}, **{"Cache-Control": "no-cache"})
             if urlsplit(url).hostname == "xha.ouc.edu.cn":
                 headers["Referer"] = "https://xha.ouc.edu.cn/a79.htm"
             self.policy.stats.record(url)
-            with self.session.get(url, params=params, timeout=self.timeout, allow_redirects=False,
+            with self.session.get(url, params=params, timeout=timeout, allow_redirects=False,
                                   stream=True, headers=headers) as response:
+                if response.status_code in (403, 429) and urlsplit(url).hostname == "api.github.com":
+                    retry = str(response.headers.get("Retry-After", ""))
+                    detail = f"，建议 {retry} 秒后重试" if retry.isdigit() and len(retry) <= 8 else "，请稍后重试"
+                    raise HttpStatusFailure(f"GitHub 拒绝请求或请求受限（HTTP {response.status_code}）{detail}；也可打开发布页。")
                 if not (response.status_code == 200 or (probe and 300 <= response.status_code < 400)
                         or (accept_redirect and response.status_code in (301,302,303,307,308))):
                     raise ValueError("http")
                 chunks, size = [], 0
                 for chunk in response.iter_content(chunk_size=16384):
+                    if deadline is not None and time.monotonic() >= deadline: raise requests.Timeout()
                     size += len(chunk)
                     if size > 1_000_000:
                         raise ValueError("size")
@@ -179,6 +194,8 @@ class RequestClient:
             message = f"{stage}：请求超时。"
         except (requests.RequestException, OSError):
             message = f"{stage}：网络连接失败。"
+        except HttpStatusFailure as error:
+            message = f"{stage}：{error}"
         except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
             message = f"{stage}：HTTP 服务异常或响应格式无效。"
         else:

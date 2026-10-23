@@ -1,5 +1,7 @@
 # 校园网自动登录工具说明
 
+双端联系作者、开源入口与 GitHub 发布更新的下一步方案见 [项目更新规划](CONTACT_OPEN_SOURCE_AND_RELEASE_UPDATE_PLAN.md)。页面与发布机制已按规划实现，当前检查和待验收项见[实施记录](RELEASE_UPDATE_VERIFICATION.md)，发布操作见[维护手册](RELEASING.md)。
+
 **最新 Windows 版本（2026-10-23）**：0.3.0 本地测试版已按 [v0.3 规划](WINDOWS_DESKTOP_V0_3_DESIGN_PLAN.md)更新真实 QML 和程序逻辑，见[安装使用](WINDOWS.md)与[实施验证](WINDOWS_V0_3_VERIFICATION.md)。[四页设计稿](../design/windows/v0.3/README.md)保留供对照。
 
 Android 1.3.4 的实际功能、安装和品牌后台设置见 [Android APK 指南](ANDROID.md)，本次外网优先、在线停止自动请求XHA的更新见 [1.3.4实施验证](ANDROID_V1_3_4_FIX_VERIFICATION.md)，历史检查见 [Android 验证记录](ANDROID_VERIFICATION.md)。

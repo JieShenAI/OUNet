@@ -1,4 +1,4 @@
-#define AppVersion "0.3.0"
+#define AppVersion "0.3.1"
 #define AppName "OUNet"
 
 [Setup]
@@ -6,6 +6,9 @@ AppId={{A6ED0C7B-B925-4FB1-84B1-F90D81234E73}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher=OUNet Project
+AppPublisherURL=https://github.com/JieShenAI/OUNet
+AppSupportURL=mailto:shencv@163.com
+AppUpdatesURL=https://github.com/JieShenAI/OUNet/releases
 AppComments=个人校园网络工具，非中国海洋大学官方软件
 DefaultDirName={localappdata}\Programs\OUCNetworkAssistant
 DefaultGroupName={#AppName}

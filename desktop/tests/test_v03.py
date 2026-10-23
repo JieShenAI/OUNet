@@ -193,6 +193,10 @@ class TransportV03(TempTest):
 
 
 class UpdateV03(TempTest):
+    def release(self,version):
+        filename=f'OUNet-{version}-Setup-x64.exe'
+        return {'tag_name':'windows-v'+version,'assets':[{'name':'windows-update.json','id':1},
+                {'name':filename,'browser_download_url':f'https://github.com/JieShenAI/OUNet/releases/download/windows-v{version}/{filename}'}]}
     def metadata(self):
         return {'platform':'windows-x64','version':'9.0.0','sha256':'a'*64,
                 'url':'https://github.com/JieShenAI/OUNet/releases/download/windows-v9.0.0/OUNet-9.0.0-Setup-x64.exe'}
@@ -212,14 +216,14 @@ class UpdateV03(TempTest):
         self.assertEqual(s.calls,[])
 
     def test_valid_windows_asset_and_version_match(self):
-        release={'tag_name':'windows-v9.0.0','assets':[{'name':'windows-update.json','id':1}]}
+        release=self.release('9.0.0')
         p=RequestPolicy(self.directory/'r.json')
         s=Session([Response(json.dumps([release])),Response(json.dumps(self.metadata()))])
         self.assertTrue(check_update(RequestClient(s,p))['newer']);self.assertEqual(len(s.calls),2)
 
     def test_release_metadata_version_mismatch_and_external_redirect_are_rejected(self):
         p=RequestPolicy(self.directory/'r.json')
-        release={'tag_name':'windows-v8.0.0','assets':[{'name':'windows-update.json','id':1}]}
+        release=self.release('8.0.0')
         s=Session([Response(json.dumps([release])),Response(json.dumps(self.metadata()))])
         with self.assertRaises(RequestFailure):check_update(RequestClient(s,p))
         response=Response('',302);response.headers={'Location':'https://example.test/private'}

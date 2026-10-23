@@ -1,8 +1,10 @@
-# OUNet Windows 0.3.0 使用说明
+# OUNet Windows 0.3.1 使用说明
 
 ## 安装与升级
 
-[下载本地安装包](../desktop/dist/OUNet-0.3.0-Setup-x64.exe)。默认按当前用户安装，不需要 Python。安装包未代码签名，同目录提供 SHA-256。先从托盘退出旧版，再运行安装器覆盖安装；账号、设置和原暂停状态保留。免安装需完整保留 `desktop/dist/OUNet/`，不能单独复制 EXE。
+[下载本地安装包](../desktop/dist/OUNet-0.3.1-Setup-x64.exe)。默认按当前用户安装，不需要 Python。安装包未代码签名，同目录提供 SHA-256。先从托盘退出旧版，再运行安装器覆盖安装；账号、设置和原暂停状态保留。免安装需完整保留 `desktop/dist/OUNet/`，不能单独复制 EXE。
+
+帮助与关于提供作者邮箱 `shencv@163.com`、系统邮件、完整源码地址和 GitHub 下载页；均可复制。公开发布与待验收范围见[更新实施记录](RELEASE_UPDATE_VERIFICATION.md)。
 
 ## 首次使用
 

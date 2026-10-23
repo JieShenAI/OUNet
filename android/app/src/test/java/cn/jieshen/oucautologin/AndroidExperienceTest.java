@@ -62,6 +62,19 @@ public class AndroidExperienceTest {
         }
     }
     private NetworkFixture network()throws Exception{return new NetworkFixture(context);}
+    @Test public void aboutProjectCopiesPublicInfoAndUsesMailtoWithoutAttachments()throws Exception{
+        try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).create().start()){
+            MainActivity a=c.get();navigate(a,2);View root=a.findViewById(android.R.id.content);
+            assertTrue(contents(root).contains(ProjectLinks.EMAIL));assertTrue(contents(root).contains(ProjectLinks.REPOSITORY));
+            find(root,a.getString(R.string.copy_email)).performClick();
+            android.content.ClipboardManager clipboard=(android.content.ClipboardManager)a.getSystemService(Context.CLIPBOARD_SERVICE);
+            assertEquals(ProjectLinks.EMAIL,clipboard.getPrimaryClip().getItemAt(0).getText().toString());
+            find(root,a.getString(R.string.copy_project)).performClick();assertEquals(ProjectLinks.REPOSITORY,clipboard.getPrimaryClip().getItemAt(0).getText().toString());
+            android.content.Intent email=ProjectLinks.contactIntent();assertEquals(android.content.Intent.ACTION_SENDTO,email.getAction());
+            assertEquals("mailto",email.getData().getScheme());assertTrue(email.getData().toString().startsWith("mailto:"+ProjectLinks.EMAIL));assertNull(email.getExtras());
+            snapshot((View)find(root,a.getString(R.string.about_ounet)).getParent(),"about-project-api35.png",1080,2400);
+        }
+    }
     @Test public void passwordWarningRemainsVisibleAndProvidesAnEditAction()throws Exception{
         NetworkFixture n=network();SettingsData.Account account=new SettingsData.Account("synthetic-id","常用账号","synthetic-student","test-cipher","test-iv",1);
         SettingsData config=new SettingsData(java.util.Collections.singletonList(account),account.id,"",1,false,5);

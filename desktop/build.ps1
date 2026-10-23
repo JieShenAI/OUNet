@@ -10,6 +10,7 @@ function Invoke-Checked {
 }
 Push-Location $desktopRoot
 try {
+    Invoke-Checked @('tools\check_versions.py')
     Invoke-Checked @('tools\prepare_assets.py')
     Invoke-Checked @('tools\collect_licenses.py')
     if (-not $SkipTests) {
@@ -33,9 +34,12 @@ try {
         & $IsccPath '/Qp' 'installer\OUCNetworkAssistant.iss'
         if ($LASTEXITCODE -ne 0) { throw '安装器编译失败。' }
     }
-    Get-ChildItem -LiteralPath (Join-Path $desktopRoot 'dist') -Filter '*Setup*.exe' | ForEach-Object {
-        $desktopHash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-        [IO.File]::WriteAllText(($_.FullName + '.sha256'),($desktopHash + '  ' + $_.Name + "`n"),[Text.UTF8Encoding]::new($false))
+    if (-not $SkipInstaller) {
+        Invoke-Checked @('tools\prepare_release.py')
+        $releaseVersion = & $desktopPython 'tools\check_versions.py'
+        if ($LASTEXITCODE -ne 0) { throw 'Version validation failed.' }
+        $bundleArguments = @('..\tools\release_bundle.py','--platform','windows','--version',$releaseVersion)
+        if (-not $SkipTests) { $bundleArguments += '--checks-passed' }
+        Invoke-Checked @bundleArguments
     }
-    if (-not $SkipInstaller) { Invoke-Checked @('tools\prepare_release.py') }
 } finally { Pop-Location }
