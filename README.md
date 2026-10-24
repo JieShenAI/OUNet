@@ -7,8 +7,8 @@
 
 | 平台 | 当前源码版本 | 说明 |
 | --- | --- | --- |
-| Android 9+ | 1.3.6 待发布 | [安装与使用](docs/ANDROID.md) · [开发与构建](android/README.md) |
-| Windows 10/11 x64 | 0.3.5 待发布 | [安装与使用](docs/WINDOWS.md) · [开发与构建](desktop/README.md) |
+| Android 9+ | [1.3.6 已发布](https://github.com/JieShenAI/OUNet/releases/tag/android-v1.3.6) | [安装与使用](docs/ANDROID.md) · [开发与构建](android/README.md) |
+| Windows 10/11 x64 | [0.3.5 已发布](https://github.com/JieShenAI/OUNet/releases/tag/windows-v0.3.5) | [安装与使用](docs/WINDOWS.md) · [开发与构建](desktop/README.md) |
 | Python CLI / Windows | 独立脚本 | [配置、启动与故障排查](docs/CLI.md) |
 
 Android 与 Windows 提供外网检测、按需校园网认证、多账号、设备信息、失败保护及诊断。
@@ -19,7 +19,7 @@ Android 与 Windows 提供外网检测、按需校园网认证、多账号、设
 联系作者：[shencv@163.com](mailto:shencv@163.com)。两端应用均提供邮箱、源码和 GitHub 下载入口。
 
 源码：[JieShenAI/OUNet](https://github.com/JieShenAI/OUNet)。
-安装包通过 [GitHub Releases](https://github.com/JieShenAI/OUNet/releases) 分发。Android 与 Windows 分别使用独立标签与安装包；草稿在完成覆盖升级验收后公开。应用内手动检查本平台正式版，通过浏览器下载并由用户覆盖安装。
+安装包通过 [GitHub Releases](https://github.com/JieShenAI/OUNet/releases) 分发。Android 与 Windows 分别使用独立标签与安装包；应用内手动检查本平台正式版，通过浏览器下载并由用户覆盖安装。
 
 本轮实施和待验收范围见 [更新验证记录](docs/RELEASE_UPDATE_VERIFICATION.md)，维护者操作见 [发布手册](docs/RELEASING.md)。
 
