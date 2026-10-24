@@ -85,10 +85,10 @@ ApplicationWindow {
                 Layout.fillWidth:true;implicitHeight:52;color:Theme.surface
                 RowLayout {
                     anchors.fill:parent;anchors.leftMargin:24;anchors.rightMargin:24;spacing:10
-                    AppButton {visible:!root.railNav;text:"菜单";quiet:true;Accessible.name:"打开导航";onClicked:navMenu.open()}
+                    AppButton {visible:!root.railNav;text:"菜单";quiet:true;Accessible.name:"打开导航";onTriggered:navMenu.open()}
                     Icon {name:v.networkKind==="Ethernet"?"network":"wifi";width:18;height:18}
                     AppText {text:v.wifi;Layout.fillWidth:true;font.pixelSize:12;color:Theme.ink;maximumLineCount:2;elide:Text.ElideRight}
-                    AppButton {text:"网络设置 ↗";quiet:true;onClicked:Backend.openLocation("network")}
+                    AppButton {text:"网络设置 ↗";quiet:true;onTriggered:Backend.openLocation("network")}
                 }
                 Rectangle {anchors.bottom:parent.bottom;height:1;width:parent.width;color:Theme.border}
             }
@@ -110,9 +110,9 @@ ApplicationWindow {
                         RowLayout {
                             Layout.fillWidth:true;spacing:14
                             ColumnLayout {Layout.fillWidth:true;spacing:4;AppText {text:v.blocked?"自动网络请求已暂停":v.migrationPending?"旧入口待处理":v.credentialError||v.title;color:v.blocked||v.migrationPending?Theme.amber:Theme.red;font.bold:true;Layout.fillWidth:true} AppText {text:v.blocked?v.pauseMessage:v.migrationPending?"请核对原脚本入口，再由桌面版接管。":v.credentialError?"这组凭据的自动 XHA 请求已停止。外网可用不代表密码正确。":v.message;font.pixelSize:12;color:v.blocked||v.migrationPending?Theme.amber:Theme.red;Layout.fillWidth:true}}
-                            AppButton {objectName:"retryRequestsButton";visible:v.blocked;text:"手动重试";enabled:!v.busy;onClicked:Backend.retryRequests()}
-                            AppButton {visible:!v.blocked&&!v.migrationPending&&!!v.credentialError;text:"修改密码";enabled:!v.busy;onClicked:{accountsPage.load(v.activeAccountId);root.go("account")}}
-                            AppButton {visible:v.migrationPending&&!v.blocked;text:"核对旧入口";enabled:!v.busy;onClicked:Backend.rescanLegacy()}
+                            AppButton {objectName:"retryRequestsButton";visible:v.blocked;text:"手动重试";busy:v.busy;onTriggered:Backend.retryRequests()}
+                            AppButton {visible:!v.blocked&&!v.migrationPending&&!!v.credentialError;text:"修改密码";busy:v.busy;onTriggered:{accountsPage.load(v.activeAccountId);root.go("account")}}
+                            AppButton {visible:v.migrationPending&&!v.blocked;text:"核对旧入口";busy:v.busy;onTriggered:Backend.rescanLegacy()}
                         }
                     }
                     OverviewPage {visible:root.page==="overview";v:root.v;Layout.fillWidth:true;Layout.leftMargin:28;Layout.rightMargin:28;onDevicesRequested:root.openDetails("devices");onSettingsRequested:root.go("settings");onAccountsRequested:root.go("account")}
@@ -135,8 +135,8 @@ ApplicationWindow {
         onClosed:{if(root.previousFocus)root.previousFocus.forceActiveFocus();root.detailKey=""}
         contentItem:ColumnLayout {
             spacing:16
-            RowLayout {Layout.fillWidth:true;Layout.margins:20;ColumnLayout {Layout.fillWidth:true;AppText {text:root.detailKey==="devices"?"ONLINE DEVICES":root.detailKey==="diagnostics"?"DIAGNOSTICS":"OUNET · DETAILS";font.pixelSize:10;color:Theme.blue;Layout.fillWidth:true} AppText {text:root.detailTitle;font.pixelSize:23;font.bold:true;Layout.fillWidth:true}} AppButton {text:"×";quiet:true;Accessible.name:"关闭详情";onClicked:detailDrawer.close()}}
-            RowLayout {visible:root.detailKey==="diagnostics";Layout.fillWidth:true;Layout.leftMargin:20;Layout.rightMargin:20;DropDown {model:["全部记录","XHA / 认证阶段","异常记录"];Layout.fillWidth:true;Accessible.name:"诊断筛选";onActivated:index=>root.logFilter=["all","xha","error"][index]} AppButton {text:root.newLogs?root.newLogs+" 条新记录":"回到最新";onClicked:root.refreshLogs(true)}}
+            RowLayout {Layout.fillWidth:true;Layout.margins:20;ColumnLayout {Layout.fillWidth:true;AppText {text:root.detailKey==="devices"?"ONLINE DEVICES":root.detailKey==="diagnostics"?"DIAGNOSTICS":"OUNET · DETAILS";font.pixelSize:10;color:Theme.blue;Layout.fillWidth:true} AppText {text:root.detailTitle;font.pixelSize:23;font.bold:true;Layout.fillWidth:true}} AppButton {text:"×";quiet:true;Accessible.name:"关闭详情";onTriggered:detailDrawer.close()}}
+            RowLayout {visible:root.detailKey==="diagnostics";Layout.fillWidth:true;Layout.leftMargin:20;Layout.rightMargin:20;DropDown {model:["全部记录","XHA / 认证阶段","异常记录"];Layout.fillWidth:true;Accessible.name:"诊断筛选";onActivated:index=>root.logFilter=["all","xha","error"][index]} AppButton {text:root.newLogs?root.newLogs+" 条新记录":"回到最新";onTriggered:root.refreshLogs(true)}}
             ScrollView {
                 id:detailsScroll;Layout.fillWidth:true;Layout.fillHeight:true;clip:true;ScrollBar.horizontal.policy:ScrollBar.AlwaysOff
                 ColumnLayout {
@@ -151,19 +151,19 @@ ApplicationWindow {
                         }
                     }
                     AppText {visible:root.detailKey==="devices";text:root.v.devices.message||(root.v.devices.items?"已读取 "+root.v.devices.items.length+" 条"+(root.v.devices.complete?"，本次读取完成。":"，尚未全部读取。")+"\n只读展示，不提供强制下线。":"");Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22;font.pixelSize:12;color:Theme.muted}
-                    RowLayout {visible:root.detailKey==="devices";Layout.leftMargin:22;AppButton {text:"刷新设备";enabled:!root.v.busy&&!root.v.blocked;onClicked:Backend.loadDevices(false)} AppButton {visible:!!root.v.devices.next&&!root.v.devices.complete;text:"加载更多";enabled:!root.v.busy&&!root.v.blocked;onClicked:Backend.loadDevices(true)}}
+                    RowLayout {visible:root.detailKey==="devices";Layout.leftMargin:22;AppButton {text:"刷新设备";busy:root.v.busy;enabled:!root.v.blocked;onTriggered:Backend.loadDevices(false)} AppButton {visible:!!root.v.devices.next&&!root.v.devices.complete;text:"加载更多";busy:root.v.busy;enabled:!root.v.blocked;onTriggered:Backend.loadDevices(true)}}
                     Repeater {
                         model:root.detailKey==="diagnostics"?root.logEntries.filter(e=>root.logFilter==="all"||root.logFilter==="xha"&&(e.kind==="stage"||e.message.indexOf("XHA")>=0)||root.logFilter==="error"&&e.kind==="warning"):[]
                         ColumnLayout {required property var modelData;Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22;spacing:6;AppText {text:modelData.time+" · "+modelData.kind;font.pixelSize:12;color:Theme.muted} CopyText {text:modelData.message;Layout.fillWidth:true;font.pixelSize:13} Rectangle {Layout.fillWidth:true;height:1;color:Theme.border;Layout.topMargin:6}}
                     }
                     AppText {visible:root.detailKey==="diagnostics"&&!root.logEntries.length;text:"暂无本地诊断记录。";color:Theme.muted;Layout.leftMargin:22}
-                    AppButton {visible:root.detailKey==="export";text:"选择位置并导出";enabled:!v.busy;Layout.leftMargin:22;onClicked:Backend.exportLogs()}
+                    AppButton {visible:root.detailKey==="export";text:"选择位置并导出";busy:v.busy;Layout.leftMargin:22;onTriggered:Backend.exportLogs()}
                     AppText {visible:root.detailKey==="update";text:root.v.updateInfo.message||"正在检查…";Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}
                     AppText {visible:root.detailKey==="update"&&!!root.v.updateInfo.checkedAt;text:"检查时间："+(root.v.updateInfo.checkedAt||"");font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}
                     CopyText {visible:root.detailKey==="update"&&!!root.v.updateInfo.sha256;text:"版本："+(root.v.updateInfo.version||"")+"\nSHA-256："+(root.v.updateInfo.sha256||"")+"\n"+(root.v.updateInfo.notes||"");font.pixelSize:12;Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}
-                    AppButton {visible:root.detailKey==="update"&&!!root.v.updateInfo.newer;text:"在浏览器下载安装包 ↗";enabled:!v.blocked;Layout.leftMargin:22;onClicked:Backend.openUpdate()}
+                    AppButton {visible:root.detailKey==="update"&&!!root.v.updateInfo.newer;text:"在浏览器下载安装包 ↗";enabled:!v.blocked;Layout.leftMargin:22;onTriggered:Backend.openUpdate()}
                     AppText {visible:root.detailKey==="update";text:"来源：GitHub · JieShenAI/OUNet\n下载完成后退出主窗口和托盘进程，再运行安装器。SHA-256 为发布文件摘要，应用不会自动安装。";font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}
-                    AppButton {visible:root.detailKey==="update";text:"GitHub 下载页 ↗";quiet:true;Layout.leftMargin:22;onClicked:Backend.openProjectLink("releases")}
+                    AppButton {visible:root.detailKey==="update";text:"GitHub 下载页 ↗";quiet:true;Layout.leftMargin:22;onTriggered:Backend.openProjectLink("releases")}
                     AppText {visible:v.status==="error"||v.blocked;text:v.blocked?v.pauseMessage:v.message;color:Theme.amber;font.pixelSize:12;Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}
                     Item {height:20;Layout.fillWidth:true}
                 }
@@ -173,10 +173,10 @@ ApplicationWindow {
     }
     Rectangle {id:noticeBox;objectName:"noticeBox";visible:false;z:100;anchors.horizontalCenter:parent.horizontalCenter;anchors.bottom:parent.bottom;anchors.bottomMargin:44;width:Math.min(root.width-40,650);height:noticeLabel.implicitHeight+26;radius:10;color:Theme.ink;AppText {id:noticeLabel;anchors.fill:parent;anchors.margins:13;color:Theme.surface;font.pixelSize:13}}
     Timer {id:noticeTimer;interval:4500;onTriggered:noticeBox.visible=false}
-    Dialog {id:quitDialog;anchors.centerIn:Overlay.overlay;modal:true;title:"退出 OUNet";width:360;contentItem:ColumnLayout {spacing:18;AppText {text:"退出后停止网络监测。"} RowLayout {AppButton {text:"退出";onClicked:{quitDialog.close();Backend.quit()}} AppButton {text:"取消";onClicked:quitDialog.close()}}}}
+    Dialog {id:quitDialog;anchors.centerIn:Overlay.overlay;modal:true;title:"退出 OUNet";width:360;contentItem:ColumnLayout {spacing:18;AppText {text:"退出后停止网络监测。"} RowLayout {AppButton {text:"退出";onTriggered:{quitDialog.close();Backend.quit()}} AppButton {text:"取消";onTriggered:quitDialog.close()}}}}
     Dialog {
         id:migrationDialog;anchors.centerIn:Overlay.overlay;modal:true;title:"核对旧脚本入口";width:Math.min(root.width-40,580)
-        contentItem:ColumnLayout {spacing:14;CopyText {text:"原目录："+v.legacyDirectory;Layout.fillWidth:true;font.pixelSize:12} Repeater {model:v.tasks;AppText {required property var modelData;text:modelData.name+" · "+(modelData.enabled?"已启用":"已停用");Layout.fillWidth:true}} AppText {text:"只处理重新核对后精确匹配的项目任务。已有请求暂停继续保留。";Layout.fillWidth:true;font.pixelSize:12;color:Theme.muted} AppButton {text:"停用匹配任务并完成迁移";enabled:!v.busy;onClicked:Backend.completeMigration(true)} AppButton {text:"已手动停用，重新核对";enabled:!v.busy;onClicked:Backend.completeMigration(false)} AppButton {text:"稍后处理";onClicked:migrationDialog.close()}}
+        contentItem:ColumnLayout {spacing:14;CopyText {text:"原目录："+v.legacyDirectory;Layout.fillWidth:true;font.pixelSize:12} Repeater {model:v.tasks;AppText {required property var modelData;text:modelData.name+" · "+(modelData.enabled?"已启用":"已停用");Layout.fillWidth:true}} AppText {text:"只处理重新核对后精确匹配的项目任务。已有请求暂停继续保留。";Layout.fillWidth:true;font.pixelSize:12;color:Theme.muted} AppButton {text:"停用匹配任务并完成迁移";busy:v.busy;onTriggered:Backend.completeMigration(true)} AppButton {text:"已手动停用，重新核对";busy:v.busy;onTriggered:Backend.completeMigration(false)} AppButton {text:"稍后处理";onTriggered:migrationDialog.close()}}
         Connections {target:Backend;function onMigrationCompleted(){migrationDialog.close()}}
     }
 }

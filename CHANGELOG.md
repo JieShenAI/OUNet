@@ -2,6 +2,12 @@
 
 Android 与 Windows 分别使用 `android-vX.Y.Z` 和 `windows-vX.Y.Z` 标签。
 
+## Windows 0.3.2（发布准备）
+
+- 修复所有页面按钮在自动检测时反复变灰、切换文字及丢失焦点。
+- 忙碌时使用输入拦截，保留按钮外观与重复操作保护；账号按钮不再随无变化通知重建。
+- [发布说明](docs/WINDOWS_V0_3_2_RELEASE_NOTES.md) · [验证记录](docs/WINDOWS_V0_3_2_VERIFICATION.md)。
+
 ## Android 1.3.5 / Windows 0.3.1（发布准备）
 
 - 新增联系作者、邮箱复制、系统邮件、开源地址和 GitHub 下载页。

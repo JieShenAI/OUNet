@@ -2,6 +2,9 @@ import QtQuick
 import QtQuick.Controls.Basic
 Switch {
     id: control
+    property bool busy: false
+    Keys.onPressed: event => inputGuard.blockKey(event)
+    BusyBlocker { id: inputGuard; busy: control.busy }
     implicitWidth: 38; implicitHeight: 24
     indicator: Rectangle {
         x: 1; y: 2; width: 36; height: 20; radius: 10

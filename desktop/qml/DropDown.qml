@@ -2,6 +2,9 @@ import QtQuick
 import QtQuick.Controls.Basic
 ComboBox {
     id: control
+    property bool busy: false
+    Keys.onPressed: event => inputGuard.blockKey(event)
+    BusyBlocker { id: inputGuard; busy: control.busy }
     implicitWidth: 190; implicitHeight: 36
     font.pixelSize: 13
     leftPadding: 11; rightPadding: 31
@@ -15,6 +18,7 @@ ComboBox {
         text: String(modelData)
         font: control.font
         highlighted: control.highlightedIndex === index
+        enabled: !control.busy
         contentItem: Text { textFormat: Text.PlainText; text: parent.text; font: control.font; color: Theme.ink; elide: Text.ElideRight; verticalAlignment: Text.AlignVCenter }
         background: Rectangle { radius: 4; color: parent.highlighted ? Theme.selected : Theme.surface }
     }

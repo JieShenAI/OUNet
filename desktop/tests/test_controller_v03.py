@@ -57,6 +57,15 @@ class ControllerV03(TempTest):
         self.controller.reconnect();self.controller.reconnect();self.controller.reconnect();self.wait()
         self.assertEqual(self.engine.return_value.check.call_count,1)
 
+    def test_only_explicit_reconnect_changes_reconnect_button_progress(self):
+        self.engine.return_value.check.side_effect=lambda *a,**k:(time.sleep(.03) or CheckResult('online','fixture',online=True))
+        for action,expected in ((self.controller.check,False),(self.controller.refreshSession,False),(self.controller.reconnect,True)):
+            action()
+            self.assertTrue(self.controller.data['busy'])
+            self.assertEqual(self.controller.data['reconnecting'],expected)
+            self.wait()
+            self.assertFalse(self.controller.data['reconnecting'])
+
     def test_delete_selected_account_does_not_select_another(self):
         self.controller.deleteAccount(self.first);self.wait()
         self.assertEqual(self.controller.settings.active_account_id,'')

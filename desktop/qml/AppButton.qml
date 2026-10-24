@@ -4,12 +4,17 @@ Button {
     id: control
     property bool primary: false
     property bool quiet: false
+    property bool busy: false
+    signal triggered()
     property string iconName: ""
     implicitHeight: 36
     implicitWidth: label.implicitWidth + (iconName ? 27 : 0) + 30
     padding: 12
     font.pixelSize: 13
     hoverEnabled: true
+    Keys.onPressed: event => inputGuard.blockKey(event)
+    onClicked: { if (!busy) triggered() }
+    BusyBlocker { id: inputGuard; busy: control.busy }
     background: Rectangle {
         radius: 7
         color: !control.enabled ? Theme.sub : control.primary ? Theme.blue : control.quiet ? (control.hovered ? Theme.selected : "transparent") : (control.hovered ? Theme.selected : Theme.surface)

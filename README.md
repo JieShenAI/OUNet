@@ -8,7 +8,7 @@
 | 平台 | 当前源码版本 | 说明 |
 | --- | --- | --- |
 | Android 9+ | 1.3.5 | [安装与使用](docs/ANDROID.md) · [开发与构建](android/README.md) |
-| Windows 10/11 x64 | 0.3.1 待发布 | [安装与使用](docs/WINDOWS.md) · [开发与构建](desktop/README.md) |
+| Windows 10/11 x64 | 0.3.2 待发布 | [安装与使用](docs/WINDOWS.md) · [开发与构建](desktop/README.md) |
 | Python CLI / Windows | 独立脚本 | [配置、启动与故障排查](docs/CLI.md) |
 
 Android 与 Windows 提供外网检测、按需校园网认证、多账号、设备信息、失败保护及诊断。
