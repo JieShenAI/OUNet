@@ -56,7 +56,7 @@ class Releases(TempTest):
         response=Response('',429);response.headers={'Retry-After':'120'}
         policy=RequestPolicy(self.directory/'rate.json');session=Session([response])
         with self.assertRaisesRegex(RequestFailure,'120 秒'):check_update(RequestClient(session,policy))
-        self.assertEqual(policy.failures,1);self.assertEqual(policy.stats.total,0)
+        self.assertEqual(policy.scope('update').failures,1);self.assertEqual(policy.failures,0);self.assertEqual(policy.stats.total,0)
     def test_duplicate_json_keys_rejected(self):
         with self.assertRaises(ValueError):strict_json('{"version":"1.0.0","version":"9.0.0"}')
     def test_equal_and_ahead_versions_do_not_offer_downgrade(self):

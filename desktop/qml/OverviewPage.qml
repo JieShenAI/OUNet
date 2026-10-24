@@ -33,7 +33,7 @@ ColumnLayout {
                     AppText {text:modelData.duration+" 秒";font.pixelSize:12;color:Theme.muted}
                 }
             }
-            AppButton {text:page.expanded?"收起恢复详情 ↑":"展开恢复详情 ↓";quiet:true;onClicked:page.expanded=!page.expanded}
+            AppButton {text:page.expanded?"收起恢复详情 ↑":"展开恢复详情 ↓";quiet:true;onTriggered:page.expanded=!page.expanded}
             AppText {visible:page.expanded;text:"同次开机重开软件保留记录；同一故障只计一次。网络自行恢复不加入协助恢复总数。";font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true}
         }
         Panel {

@@ -9,12 +9,14 @@ os.environ["QT_QPA_PLATFORM"]="offscreen"
 os.environ["QT_QUICK_BACKEND"]="software"
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT),str(ROOT.parent)]
-from PySide6.QtCore import QObject,QUrl,QCoreApplication,QEvent,QMetaObject,Q_ARG
-from PySide6.QtGui import QFontDatabase
+from PySide6.QtCore import QObject,QUrl,QCoreApplication,QEvent,QMetaObject,Q_ARG,Qt,QPointF
+from PySide6.QtGui import QFontDatabase,QInputMethodEvent
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuick import QQuickWindow
 from PySide6.QtTest import QTest
+from PySide6.QtQml import QQmlProperty
+from shiboken6 import getCppPointer, isValid
 from ouc_desktop.controller import Controller
 
 
@@ -50,20 +52,113 @@ def main():
             settle();QTest.qWait(240)
             find("noticeBox").setProperty("visible",False);settle()
             assert window.grabWindow().save(str(output/(name+".png")))
+        def buttons():
+            stack=[window.contentItem()];result=[]
+            while stack:
+                item=stack.pop();stack.extend(item.childItems())
+                if hasattr(item,'triggered'):result.append(item)
+            return result
+        def button_state():
+            result={}
+            for item in buttons():
+                color=QQmlProperty.read(item,'background.color')
+                labels=[(child.property('text'),child.property('color').name()) for child in item.findChildren(QObject)
+                        if isinstance(child.property('text'),str) and hasattr(child.property('color'),'name')]
+                result[getCppPointer(item)[0]]=(item.property('text'),item.property('enabled'),
+                    color.name() if hasattr(color,'name') else '',QQmlProperty.read(item,'background.border.width'),
+                    tuple(labels),round(item.width(),2),round(item.height(),2))
+            return result
         settle()
+        # Busy cycles must not recolor, relabel or recreate any action button.
+        # Exercise the real QML rather than only checking source expressions.
+        backend.active_intent='auto'
+        for route in ('overview','account','settings','help'):
+            invoke(window,'go',route);QTest.qWait(60);settle()
+            if route=='account':find('accountRow_demo1').forceActiveFocus();QTest.qWait(20);settle()
+            before=button_state()
+            for _ in range(4):
+                backend.busy=True;backend.changed.emit();QTest.qWait(20);settle()
+                after=button_state()
+                differences=[(before.get(k),after.get(k)) for k in before.keys()|after.keys() if before.get(k)!=after.get(k)]
+                assert not differences,'Button appearance changed on automatic check: '+route+' '+repr(differences[:2])
+                if route=='account':assert find('accountRow_demo1').hasActiveFocus(),'Account delegate was recreated'
+                backend.busy=False;backend.changed.emit();QTest.qWait(20);settle()
+                assert button_state()==before,'Button appearance changed after automatic check: '+route
+        invoke(window,'go','overview');window.setHeight(1700);settle()
+        guarded=find('reconnectButton');fired=[]
+        def record_activation():fired.append(True)
+        guarded.triggered.connect(record_activation)
+        guarded.forceActiveFocus();settle()
+        position=guarded.mapToScene(QPointF(guarded.width()/2,guarded.height()/2)).toPoint()
+        QTest.mouseMove(window,position);settle();hovered_state=button_state()
+        backend.busy=True;backend.changed.emit();settle()
+        assert button_state()==hovered_state,'Hovered/focused button flickered while busy'
+        QTest.mouseClick(window,Qt.MouseButton.LeftButton,Qt.KeyboardModifier.NoModifier,position)
+        QTest.keyClick(window,Qt.Key.Key_Space);settle()
+        assert not fired,'Busy input reached action handler'
+        backend.busy=False;backend.changed.emit();settle()
+        QTest.keyPress(window,Qt.Key.Key_Space)
+        backend.busy=True;backend.changed.emit();settle()
+        QTest.keyRelease(window,Qt.Key.Key_Space);settle()
+        assert not fired and not guarded.property('pressed'),'In-flight key was activated or left pressed'
+        backend.busy=False;backend.changed.emit();settle()
+        QTest.keyClick(window,Qt.Key.Key_Space);settle()
+        assert len(fired)==1,'Idle keyboard activation was lost'
+        guarded.triggered.disconnect(record_activation);invoke(window,'go','overview')
+        previous_session=dict(backend.session)
+        backend.session=dict(previous_session,availability='stale');backend.network_key='different-network'
+        backend.changed.emit();settle()
+        for key in ('account','online_since','mobile_identifier','source_ipv4','source_ipv6','source_mac'):
+            assert find('session_'+key).property('text')==previous_session[key],'Last account field hidden: '+key
+        assert find('sessionIdentity').property('text')==previous_session['account']
+        capture('previous-account-preserved')
+        backend.session={};backend.changed.emit();settle()
+        assert find('sessionIdentity').property('text')=='—'
+        assert find('session_account').property('text')=='—'
+        backend.session=previous_session;backend.network_key=previous_session['network_key'];backend.changed.emit();settle()
         window.setWidth(1440);window.setHeight(1120);capture("overview-desktop")
         window.setWidth(1200);window.setHeight(820);settle()
         choice=find("accountChoice");choice.setProperty("currentIndex",1)
         QMetaObject.invokeMethod(choice,"activated",Q_ARG(int,1));settle()
         assert backend.data["activeAccountId"]=="demo2"
         assert backend.session['account']=='demo_2026001',"Local selection changed actual online identity"
-        backend.busy=True;backend.changed.emit();settle();assert not choice.property("enabled")
+        backend.busy=True;backend.changed.emit();settle();assert choice.property("enabled") and choice.property('busy')
         backend.busy=False;backend.changed.emit();settle()
         window.setProperty("page","account");settle()
         invoke(find("accountEditor"),"load","demo2")
         assert find("accountUsername").property("text")=="demo_2026002"
         assert find("accountPassword").property("text")==""
         assert find("accountPassword").property("placeholderText")=="********"
+        # Real keyboard/IME input must survive the busy/idle footer transitions.
+        backend.active_intent='auto';backend.configuration_operation=False
+        backend.busy=True;backend.changed.emit();settle()
+        add=next(b for b in buttons() if b.property('text')=='＋ 添加账号')
+        add.forceActiveFocus();QTest.keyClick(window,Qt.Key.Key_Space);settle()
+        assert find('accountEditor').property('adding'),'Background check blocked adding an account'
+        for name,parts in (('accountUsername',('2026','00123')),('accountPassword',('SECRET','1234')),
+                           ('accountLabel',('WORK','DESK'))):
+            field=find(name);field.forceActiveFocus();settle()
+            expected=''
+            for busy,part in zip((True,False),parts):
+                backend.busy=busy;backend.changed.emit();QTest.qWait(20);settle()
+                assert field.property('enabled') and field.hasActiveFocus(),name+' lost edit focus'
+                for character in part:QTest.keyClick(window,ord(character.upper()))
+                expected+=part
+                assert field.property('text')==expected,name+' lost keyboard input'
+                assert field.property('cursorPosition')==len(expected),name+' cursor moved'
+            if name=='accountLabel':
+                composition=QInputMethodEvent('备注',[])
+                QCoreApplication.sendEvent(window,composition);settle()
+                backend.busy=True;backend.changed.emit();QTest.qWait(20);settle()
+                assert field.hasActiveFocus() and field.property('preeditText')=='备注','IME composition interrupted'
+                committed=QInputMethodEvent();committed.setCommitString('备注')
+                QCoreApplication.sendEvent(window,committed);settle()
+                assert field.property('text')==expected+'备注','IME commit lost'
+        backend.configuration_operation=True;backend.busy=True;backend.changed.emit();settle()
+        assert all(not find(name).property('enabled') for name in ('accountLabel','accountUsername','accountPassword')),'Account mutation must lock the editor'
+        backend.busy=False;backend.changed.emit();settle()
+        assert all(find(name).property('enabled') for name in ('accountLabel','accountUsername','accountPassword')),'Editor stayed locked after saving'
+        invoke(find('accountEditor'),'load','demo2')
         # Editing stays untouched while background status notifications refresh.
         find("accountLabel").setProperty("text","unsaved remark")
         backend.changed.emit();settle();assert find("accountLabel").property("text")=="unsaved remark"
@@ -84,6 +179,12 @@ def main():
         backend.status="protected";backend.changed.emit();settle();assert find("retryRequestsButton").property("visible")
         backend.toggleMonitor();backend.toggleMonitor();assert backend.blocked
         capture("requests-paused")
+        invoke(window,'go','account');invoke(find('accountEditor'),'load','')
+        draft=find('accountUsername');draft.forceActiveFocus();settle()
+        backend.configuration_operation=False;backend.busy=True;backend.changed.emit();settle()
+        QTest.keyClick(window,Qt.Key.Key_2);settle()
+        assert draft.property('text')=='2' and draft.hasActiveFocus(),'Recovery status interrupted account input'
+        backend.busy=False;backend.changed.emit();settle();invoke(find('accountEditor'),'load','demo2');invoke(window,'go','overview')
         backend.policy.success();backend.policy.clear_credential("demo2");backend.changed.emit()
         invoke(window,"openDetails","devices")
         assert backend.devices.get('items'),"Device drawer not connected to backend"
@@ -118,7 +219,10 @@ def main():
             assert field.property('width')>100 and field.property('width')<width
         assert not warnings,'\n'.join(warnings)
         report={"accountSelectionDoesNotChangeOnlineIdentity":True,"passwordPlaceholderOnly":True,
-                "busyDisablesAccount":True,"unsavedInputSurvivesRefresh":True,"fractionalSeconds":True,
+                "busyBlocksInputWithoutFlicker":True,"stableButtonsDuringAutomaticChecks":True,"accountDelegatesPreserved":True,"unsavedInputSurvivesRefresh":True,
+                "accountKeyboardInputSurvivesChecks":True,"accountImeSurvivesChecks":True,"accountMutationLocksEditor":True,"fractionalSeconds":True,
+                "automaticRecoveryNoticePreservesEditing":True,
+                "lastAccountVisibleWithoutExpanding":True,"emptyAccountUsesNeutralPlaceholder":True,
                 "pausePersists":True,"primaryTextContrast":True,"darkTheme":True,"deviceDrawer":True,
                 "latestLogsFirst":True,"widths":[1440,1200,1008,820,640],"qmlWarnings":warnings,
                 "realNetwork":False,"realUserData":False}

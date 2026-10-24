@@ -208,12 +208,12 @@ class UpdateV03(TempTest):
         p=RequestPolicy(self.directory/'r.json')
         s=Session([Response(json.dumps([{'tag_name':'android-v99.0.0','assets':[]}]))])
         data=check_update(RequestClient(s,p));self.assertNotIn('url',data);self.assertEqual(p.stats.total,0)
-    def test_global_pause_blocks_update_before_dispatch(self):
+    def test_campus_pause_does_not_block_update(self):
         p=RequestPolicy(self.directory/'r.json')
         for _ in range(3):p.failure('fixture')
-        s=Session([])
-        with self.assertRaises(RequestsPaused):check_update(RequestClient(s,p))
-        self.assertEqual(s.calls,[])
+        s=Session([Response('[]')])
+        self.assertEqual(check_update(RequestClient(s,p))['state'],'empty')
+        self.assertEqual(len(s.calls),1);self.assertTrue(p.paused)
 
     def test_valid_windows_asset_and_version_match(self):
         release=self.release('9.0.0')

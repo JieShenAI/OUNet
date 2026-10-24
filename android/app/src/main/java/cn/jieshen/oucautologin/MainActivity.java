@@ -71,7 +71,8 @@ public final class MainActivity extends Activity {
     private final Runnable refreshed=()->{if(visible&&!isDestroyed())refresh();};
     private final Runnable networkEvent=()->{
         if(!visible)return;
-        CheckCoordinator.request(this,store.enabled()?RunGate.AUTOMATIC:RunGate.MANUAL,"网络变化",refreshed);
+        if(store.enabled())try{store.expediteRetry();}catch(IOException e){showError(e);return;}
+        CheckCoordinator.request(this,store.enabled()?RunGate.AUTOMATIC:RunGate.READ_ONLY,"网络变化",refreshed);
         refresh();
     };
     private final Runnable ticker=new Runnable(){public void run(){if(visible){refresh();handler.postDelayed(this,store.intervalMs());}}};
@@ -166,9 +167,9 @@ public final class MainActivity extends Activity {
         interval=field(automatic,"状态评估间隔（秒，最低0.3；推荐1）",intervalDraft.isEmpty()?store.intervalText():intervalDraft,InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL,"1");
         LinearLayout presets=new LinearLayout(this);automatic.addView(presets);for(String value:new String[]{"0.3","1","3","10"}){Button preset=new Button(this);preset.setText(getString(R.string.seconds_text,value));presets.addView(preset,new LinearLayout.LayoutParams(0,-2,1));preset.setOnClickListener(v->interval.setText(value));}
         button(automatic,"保存间隔",false,()->{try{store.setIntervalMs(SettingsData.parseSeconds(interval.getText().toString()));configurationChanged(false,"保存间隔");toast("已保存，本地评估与HTTP请求频率分别控制");}catch(Exception e){interval.setError(e.getMessage());}});
-        automatic.addView(secondary("默认1秒，最小0.3秒。断网时按设定节拍轮换探测，不设每分钟请求配额或失败退避；稳定在线约15秒探测一次。请求耗时和锁屏调度可能延后。"));
+        automatic.addView(secondary("默认1秒，最小0.3秒。断网时轮换探测；连续3次临时故障后，按15秒、30秒、1分钟、2分钟、5分钟自动复检，恢复后继续守护。稳定在线约15秒探测一次。请求耗时和锁屏调度可能延后。"));
         LinearLayout tools=card(body);tools.addView(text("账号与系统",18,true));button(tools,"管理校园网账号",false,this::showAccounts);button(tools,"权限与品牌后台设置",false,this::showSettings);button(tools,"诊断记录",false,this::showLogs);
-        button(tools,"重置失败保护",false,()->new AlertDialog.Builder(this).setTitle("允许重新尝试认证？").setMessage("清除明确认证失败记录。已取消固定认证冷却；点击首页重新检测并连接可同时重置并立即尝试。")
+        button(tools,"重置失败保护",false,()->new AlertDialog.Builder(this).setTitle("允许重新尝试认证？").setMessage("临时故障会自动复检。此操作清除失败保护并允许立即尝试；账号密码错误时请先修改凭据。")
             .setPositiveButton("重置",(d,w)->{try{store.resetRetry();readOnly();}catch(Exception e){showError(e);}}).setNegativeButton("取消",null).show());
         LinearLayout docs=card(body);docs.addView(text("使用文档",18,true));button(docs,"APP介绍",false,()->showDocument("APP介绍",R.raw.app_intro));button(docs,"数据使用说明",false,()->showDocument("数据使用说明",R.raw.data_usage));button(docs,"版权与第三方声明",false,()->showDocument("版权与第三方声明",R.raw.copyright_notice));
         LinearLayout project=card(body);project.addView(text(getString(R.string.about_ounet),18,true));
@@ -249,7 +250,7 @@ public final class MainActivity extends Activity {
                 }
                 if(c.generation!=renderedGeneration){updating=true;accountIds=new ArrayList<>();List<String> labels=new ArrayList<>();accountIds.add("");labels.add(c.accounts.isEmpty()?"添加校园网账号":"请选择账号");int selection=0;for(SettingsData.Account a:c.accounts){accountIds.add(a.id);labels.add(a.display());if(a.id.equals(c.activeId))selection=labels.size()-1;}setOptions(accounts,labels);accounts.setSelection(selection);monitor.setChecked(c.enabled);updating=false;renderedGeneration=c.generation;}
                 accountHint.setText(c.active()==null?"未选账号；仍可检测网络及读取在线信息":"切换后立即检测，断网时按需认证；在线账号以上方学校会话为准");
-                RetryPolicy retry=store.retry();monitorHint.setText(getString(R.string.monitor_summary,c.intervalText(),!online&&authError!=AuthError.NONE?authError.title()+"，已暂停重试":!online&&retry.blocked?"认证已暂停":MonitorService.running?"监测中":c.enabled?"服务未运行，请检查后台设置":"监测关闭"));
+                RetryPolicy retry=store.retry();monitorHint.setText(getString(R.string.monitor_summary,c.intervalText(),!online&&authError!=AuthError.NONE?authError.title()+"，已暂停重试":!online&&(retry.blocked||store.transportRetry().blocked)?(c.enabled?store.recheckMessage():"监测关闭"):MonitorService.running?"监测中":c.enabled?"服务未运行，请检查后台设置":"监测关闭"));
                 RecoveryRepository repo=RecoveryRepository.get(this);synchronized(repo){recoveryCount.setText(getString(R.string.recovery_count,repo.count()));List<RecoveryRepository.Event> latest=repo.page(0,1);recent.setText(!repo.error().isEmpty()?repo.error():latest.isEmpty()?"暂无恢复记录":time(latest.get(0).recoveredAt)+" · "+(latest.get(0).kind.equals("ASSISTED")?"认证后恢复":"网络自行恢复（不计数）"));}
             }
             if(recordsHeading!=null){RecoveryRepository repo=RecoveryRepository.get(this);synchronized(repo){if(recordsRevision!=repo.revision()){timeline.removeAllViews();recordOffset=0;loadRecords();recordsRevision=repo.revision();}recordsHeading.setText(getString(R.string.recovery_count,repo.count()));}}

@@ -72,10 +72,13 @@ class RequestTests(TempTest):
         s=Session([])
         r=MonitorEngine(self.policy,Mock(),lambda:s).check(fetch_info=True)
         self.assertTrue(r.blocked);self.assertEqual(s.calls,[])
-    def test_three_probe_failures_end_current_flow_at_third_request(self):
+    def test_public_probe_failures_do_not_block_campus_status(self):
         s=Session([requests.Timeout() for _ in range(10)]);wifi=Mock();wifi.current.return_value=['Test']
+        for _ in range(3):
+            with self.assertRaises(RequestFailure):RequestClient(s,self.policy).get(core.PROBES[0][0],'probe',probe=True)
         r=MonitorEngine(self.policy,wifi,lambda:s).check(core.Config('fake','001234','Test','Profile'))
-        self.assertTrue(r.blocked);self.assertEqual(len(s.calls),3)
+        self.assertFalse(r.blocked);self.assertTrue(self.policy.scope('external').paused)
+        self.assertEqual(len(s.calls),4);self.assertEqual(self.policy.failures,1)
         self.assertFalse(any('login' in url for url,_ in s.calls))
     def test_state_write_failure_closes_gate(self):
         with patch('ouc_desktop.request_policy.write_json',side_effect=StorageError('fixture')):

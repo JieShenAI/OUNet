@@ -57,11 +57,63 @@ class ControllerV03(TempTest):
         self.controller.reconnect();self.controller.reconnect();self.controller.reconnect();self.wait()
         self.assertEqual(self.engine.return_value.check.call_count,1)
 
+    def test_only_explicit_reconnect_changes_reconnect_button_progress(self):
+        self.engine.return_value.check.side_effect=lambda *a,**k:(time.sleep(.03) or CheckResult('online','fixture',online=True))
+        for action,expected in ((self.controller.check,False),(self.controller.refreshSession,False),(self.controller.reconnect,True)):
+            action()
+            self.assertTrue(self.controller.data['busy'])
+            self.assertEqual(self.controller.data['reconnecting'],expected)
+            self.wait()
+            self.assertFalse(self.controller.data['reconnecting'])
+
     def test_delete_selected_account_does_not_select_another(self):
         self.controller.deleteAccount(self.first);self.wait()
         self.assertEqual(self.controller.settings.active_account_id,'')
         self.assertTrue(any(a['id']==self.second for a in self.controller.accounts))
         self.assertFalse(self.controller.settings.monitor)
+
+    def test_only_configuration_work_locks_account_editing(self):
+        # Block the worker deliberately so assertions observe a real in-flight task.
+        released=threading.Event()
+        try:
+            self.assertTrue(self.controller._submit(lambda progress:released.wait(2),lambda result:None))
+            self.assertTrue(self.controller.data['busy'])
+            self.assertFalse(self.controller.data['configurationBusy'])
+            released.set();self.wait();released.clear()
+            self.assertTrue(self.controller._submit(lambda progress:released.wait(2),lambda result:None,configuration=True))
+            self.assertTrue(self.controller.data['configurationBusy'])
+            released.set();self.wait()
+            self.assertFalse(self.controller.data['configurationBusy'])
+        finally:released.set()
+
+    def test_cooldown_keeps_timer_and_resumes_without_network_event(self):
+        self.controller.initialized=True;self.controller.settings.monitor=True
+        for _ in range(3):self.controller.policy.failure('router unavailable')
+        self.controller._schedule()
+        self.assertTrue(self.controller.timer.isActive())
+        self.assertGreater(self.controller.timer.interval(),13000)
+        self.controller.check();self.engine.assert_not_called()
+        self.controller.policy.deadline=time.monotonic()-1
+        def restored(*args,**kwargs):
+            self.controller.policy.success();return CheckResult('online','restored',online=True)
+        self.engine.return_value.check.side_effect=restored
+        self.controller.check();self.wait()
+        self.engine.return_value.check.assert_called_once()
+        self.assertFalse(self.controller.blocked);self.assertEqual(self.controller.timer.interval(),1000)
+
+    def test_network_events_allow_one_early_trial_but_disabled_monitor_stays_off(self):
+        self.controller.initialized=True;self.controller.settings.monitor=True
+        for _ in range(3):self.controller.policy.failure('router unavailable')
+        def still_offline(*args,**kwargs):
+            self.controller.policy.before_request();self.controller.policy.failure('still offline')
+            return CheckResult('protected','waiting',blocked=True)
+        self.engine.return_value.check.side_effect=still_offline
+        self.controller._event_check();self.wait()
+        self.controller._event_check();self.wait()
+        self.assertEqual(self.engine.return_value.check.call_count,1)
+        self.controller.settings.monitor=False;self.controller._schedule()
+        self.controller._event_check();self.wait()
+        self.assertEqual(self.engine.return_value.check.call_count,1);self.assertFalse(self.controller.timer.isActive())
 
     def test_same_password_and_rename_do_not_clear_credential_block(self):
         revision=self.controller.accounts[0]['revision']
@@ -82,10 +134,38 @@ class ControllerV03(TempTest):
         self.controller.check();self.wait()
         self.assertEqual(self.controller.session['fetched_at'],'old-time')
 
-    def test_paused_read_only_entries_cannot_dispatch(self):
+    def test_offline_refresh_preserves_last_account_fields_and_persistent_snapshot(self):
+        previous={'account':'last-online','availability':'ready','network_key':'previous-network',
+                  'fetched_at':'previous-time','online_since':'previous-login','source_ipv4':'192.0.2.8',
+                  'source_ipv6':'2001:db8::8','source_mac':'02:00:00:00:00:08','mobile_identifier':'PC端（0）'}
+        self.controller.session=dict(previous);self.controller.snapshots.save(previous)
+        self.engine.return_value.check.return_value=CheckResult('offline','offline',online=False,
+            session={'availability':'unavailable','login_state':'offline','message':'XHA 确认未登录。'})
+        self.controller.refreshSession();self.wait()
+        for key,value in previous.items():
+            if key!='availability':self.assertEqual(self.controller.session[key],value)
+        self.assertTrue(self.controller.data['sessionStale'])
+        self.assertEqual(self.controller.snapshots.read(),previous)
+        restarted=Controller(self.directory)
+        try:
+            self.assertEqual(restarted.session['account'],'last-online')
+            self.assertEqual(restarted.session['fetched_at'],'previous-time')
+        finally:restarted.cleanup();restarted.deleteLater()
+
+    def test_successful_new_identity_replaces_previous_snapshot(self):
+        self.controller.session={'account':'previous','source_ipv4':'192.0.2.1','fetched_at':'previous-time'}
+        current={'account':'new-identity','availability':'ready','source_ipv4':'192.0.2.2','fetched_at':'new-time'}
+        self.engine.return_value.check.return_value=CheckResult('online','online',online=True,session=current)
+        self.controller.refreshSession();self.wait()
+        self.assertEqual(self.controller.session,dict(current,network_key='fake'))
+        self.assertEqual(self.controller.snapshots.read(),self.controller.session)
+
+    def test_cooling_campus_reads_wait_but_update_is_independent(self):
         for _ in range(3):self.controller.policy.failure('fixture')
-        self.controller.refreshSession();self.controller.loadDevices(False);self.controller.checkUpdate()
+        self.controller.refreshSession();self.controller.loadDevices(False)
         self.assertFalse(self.controller.busy);self.engine.assert_not_called()
+        with patch('ouc_desktop.update.check_update',return_value={'state':'empty'}) as lookup:
+            self.controller.checkUpdate();self.wait();lookup.assert_called_once()
 
     def test_public_project_links_work_while_paused_and_report_handler_failure(self):
         for _ in range(3):self.controller.policy.failure('fixture')

@@ -27,7 +27,7 @@ public final class MonitorService extends Service {
     private long started;
     private long scheduleRevision;
     private final Runnable periodic=this::checkNow;
-    private final Runnable event=this::checkNow;
+    private final Runnable event=()->{try{new AppStore(this).expediteRetry();}catch(IOException e){new AppStore(this).status(e.getMessage());}checkNow();};
     private final BroadcastReceiver unlock=new BroadcastReceiver(){
         @Override public void onReceive(Context c,Intent intent){networkEvent();}
     };
@@ -64,8 +64,11 @@ public final class MonitorService extends Service {
         handler.removeCallbacks(periodic);nextCheckElapsed=0;started=SystemClock.elapsedRealtime();
         final long revision=++scheduleRevision,checkStarted=started;
         CheckCoordinator.request(this,RunGate.AUTOMATIC,()->{
-            if(running&&revision==scheduleRevision&&new AppStore(this).enabled())
-                plan(CheckSchedule.nextMillis(checkStarted,SystemClock.elapsedRealtime(),new AppStore(this).intervalMs()));
+            if(running&&revision==scheduleRevision&&new AppStore(this).enabled()){
+                AppStore store=new AppStore(this);long delay;
+                try{delay=store.recheckDelay();}catch(IOException e){store.status(e.getMessage());delay=300000;}
+                plan(delay>0?SystemClock.elapsedRealtime()+delay:CheckSchedule.nextMillis(checkStarted,SystemClock.elapsedRealtime(),store.intervalMs()));
+            }
         });
     }
     @Override public int onStartCommand(Intent intent,int flags,int startId){

@@ -44,8 +44,9 @@ def check_external(client):
                         and re.search(r"<body>\s*Success\s*</body>", text, re.I))
         try:
             if client.get(url, "检测外网", decode, probe=True): return True
-        except RequestFailure:
-            if client.policy.paused: raise
+        except (RequestFailure,RequestsPaused):
+            if client.cancel.is_set(): raise
+            if client.policy.scope('external').paused: break
     return False
 
 
@@ -67,7 +68,11 @@ class MonitorEngine:
         valid_context = context is None or context.valid
         portal_phase, campus_confirmed = False, False
         try:
-            self.policy.before_request()
+            if self.policy.storage_failed:self.policy.before_request()
+            if self.policy.state['legacy_pause'] and not self.policy.trial:self.policy.before_request()
+            if (self.policy.recovery_paused and self.policy.retry_seconds>0
+                    and not self.policy.trial and not self.policy.scope('authentication').trial):
+                raise RequestsPaused(self.policy.pause_message())
             with self.session_factory() as session:
                 adapter, guard = None, None
                 if context and context.valid:
@@ -80,6 +85,7 @@ class MonitorEngine:
                 if intent == "auto":
                     progress("checking", "正在验证外网。")
                     if self.probe(client):
+                        self.policy.success();self.policy.scope('authentication').success()
                         result.status, result.online = "online", True
                         result.message = "外网验证通过，本轮未访问 XHA。"
                         return self._finish(result, start)
@@ -98,6 +104,7 @@ class MonitorEngine:
                 campus_confirmed = True
                 result.login_state = status["state"]
                 if status["state"] == "online":
+                    self.policy.scope('authentication').success()
                     if intent in ("refresh", "reconnect"):
                         try: result.session = portal.fetch_session(status)
                         except RequestFailure as error: result.session_error = str(error)
@@ -121,18 +128,24 @@ class MonitorEngine:
                         result.online=self.probe(client)
                         if not result.online:
                             result.detected_offline=True;self.on_offline()
+                    authentication=self.policy.scope('authentication')
+                    authentication.before_request()
                     progress("authenticating", "XHA 确认未登录，正在认证。")
-                    response = portal.authenticate(config)
+                    try: response = portal.authenticate(config)
+                    except RequestFailure:
+                        authentication.failure('认证连接暂不可用。');raise
                     result.authenticated = True
                     error = credential_error(response.message) if not response.accepted else ""
                     if error:
+                        authentication.success()
                         result.credential_rejected, result.credential_message = True, error
                         result.status, result.message = "credentials", error
                         return self._finish(result, start)
                     if not response.accepted:
+                        authentication.failure(response.message)
                         result.status, result.message = "offline", response.message
                         return self._finish(result, start)
-                    result.credential_confirmed = True
+                    authentication.success();result.credential_confirmed = True
                     progress("checking", "认证已响应，正在验证外网。")
                     for _ in range(3):
                         if self.cancel.wait(2): raise RequestsPaused("本轮已停止。")
@@ -157,9 +170,12 @@ class MonitorEngine:
         return self._finish(result, start)
 
     def _finish(self, result, start):
-        result.failures, result.blocked = self.policy.failures, self.policy.paused
+        if result.online:
+            self.policy.success();self.policy.scope('authentication').success()
+        result.failures = max(self.policy.failures,self.policy.scope('authentication').failures)
+        result.blocked = self.policy.recovery_paused
         result.duration = max(0, self.clock() - start)
-        if result.blocked:
+        if result.blocked and result.status!='credentials' and not result.online:
             result.status = "protected"
-            result.message = "旧版暂停待处理，请手动重试。" if self.policy.state["legacy_pause"] else "连续 3 次网络请求失败，已停止自动网络请求。"
+            result.message = self.policy.pause_message()
         return result
