@@ -93,7 +93,11 @@ def upload_draft(api,directory):
     if release is not None and release.get('target_commitish')!=sha:
         raise ValueError('Existing draft targets another source commit; review it before resuming')
     notes=directory/('ANDROID_RELEASE_NOTES.md' if manifest['platform']=='android' else 'WINDOWS_RELEASE_NOTES.md')
-    body=notes.read_text(encoding='utf-8')+'\n\n源码提交：`'+sha+'`。构建及未验收范围见同提交的 `docs/RELEASE_UPDATE_VERIFICATION.md`。\n'
+    verification='docs/RELEASE_UPDATE_VERIFICATION.md'
+    candidate=f"docs/WINDOWS_V{manifest['version'].replace('.', '_')}_VERIFICATION.md"
+    if manifest['platform']=='windows' and (Path(__file__).resolve().parents[1]/candidate).is_file():
+        verification=candidate
+    body=notes.read_text(encoding='utf-8')+'\n\n源码提交：`'+sha+'`。[构建验证与实际范围]('+REPO+'/blob/main/'+verification+')。\n'
     if release is None:
         release=api.request('/releases','POST',{'tag_name':tag,'target_commitish':sha,
                     'name':'OUNet '+('Android ' if manifest['platform']=='android' else 'Windows ')+manifest['version'],
