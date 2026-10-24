@@ -105,6 +105,17 @@ def main():
         QTest.keyClick(window,Qt.Key.Key_Space);settle()
         assert len(fired)==1,'Idle keyboard activation was lost'
         guarded.triggered.disconnect(record_activation);invoke(window,'go','overview')
+        previous_session=dict(backend.session)
+        backend.session=dict(previous_session,availability='stale');backend.network_key='different-network'
+        backend.changed.emit();settle()
+        for key in ('account','online_since','mobile_identifier','source_ipv4','source_ipv6','source_mac'):
+            assert find('session_'+key).property('text')==previous_session[key],'Last account field hidden: '+key
+        assert find('sessionIdentity').property('text')==previous_session['account']
+        capture('previous-account-preserved')
+        backend.session={};backend.changed.emit();settle()
+        assert find('sessionIdentity').property('text')=='—'
+        assert find('session_account').property('text')=='—'
+        backend.session=previous_session;backend.network_key=previous_session['network_key'];backend.changed.emit();settle()
         window.setWidth(1440);window.setHeight(1120);capture("overview-desktop")
         window.setWidth(1200);window.setHeight(820);settle()
         choice=find("accountChoice");choice.setProperty("currentIndex",1)
@@ -211,6 +222,7 @@ def main():
                 "busyBlocksInputWithoutFlicker":True,"stableButtonsDuringAutomaticChecks":True,"accountDelegatesPreserved":True,"unsavedInputSurvivesRefresh":True,
                 "accountKeyboardInputSurvivesChecks":True,"accountImeSurvivesChecks":True,"accountMutationLocksEditor":True,"fractionalSeconds":True,
                 "automaticRecoveryNoticePreservesEditing":True,
+                "lastAccountVisibleWithoutExpanding":True,"emptyAccountUsesNeutralPlaceholder":True,
                 "pausePersists":True,"primaryTextContrast":True,"darkTheme":True,"deviceDrawer":True,
                 "latestLogsFirst":True,"widths":[1440,1200,1008,820,640],"qmlWarnings":warnings,
                 "realNetwork":False,"realUserData":False}

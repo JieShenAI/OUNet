@@ -1,16 +1,16 @@
 # OUNet Windows Desktop
 
-版本 **0.3.4（待公开发布）** · Python / PySide6 / QML · Windows 10 1809+ / Windows 11 x64。
+版本 **0.3.5（待公开发布）** · Python / PySide6 / QML · Windows 10 1809+ / Windows 11 x64。
 
 [使用说明](../docs/WINDOWS.md) · [v0.3 设计规划](../docs/WINDOWS_DESKTOP_V0_3_DESIGN_PLAN.md) · [v0.3 实施与验证](../docs/WINDOWS_V0_3_VERIFICATION.md)
 
 0.3.1 新增联系作者、开源项目与 GitHub 下载入口，完善正式版检查和发布打包。[发布说明](../docs/WINDOWS_V0_3_1_RELEASE_NOTES.md) · [实施与待验收](../docs/RELEASE_UPDATE_VERIFICATION.md)。
 
-0.3.4 新增临时暂停、自动复检与恢复后继续守护，并包含账号输入和按钮闪烁修复。[发布说明](../docs/WINDOWS_V0_3_4_RELEASE_NOTES.md) · [修复验证](../docs/WINDOWS_V0_3_4_VERIFICATION.md)。
+0.3.5 默认保留并显示上一次校园账号信息，取消“尚未读取”提示；包含自动复检、账号输入与按钮闪烁修复。[发布说明](../docs/WINDOWS_V0_3_5_RELEASE_NOTES.md) · [修复验证](../docs/WINDOWS_V0_3_5_VERIFICATION.md)。
 
 ## 交付与行为
 
-- [安装包](dist/OUNet-0.3.4-Setup-x64.exe)与同目录 SHA-256；免安装可使用 `dist/OUNet-0.3.4-Windows-x64-portable.zip`，需完整保留 `dist/OUNet/`，运行 `OUNet.exe`。不依赖用户安装 Python。
+- [安装包](dist/OUNet-0.3.5-Setup-x64.exe)与同目录 SHA-256；免安装可使用 `dist/OUNet-0.3.5-Windows-x64-portable.zip`，需完整保留 `dist/OUNet/`，运行 `OUNet.exe`。不依赖用户安装 Python。
 - 四个真实页面：连接概览、账号管理、偏好设置、帮助与关于；浅/深色、收起导航、在线设备与诊断抽屉。
 - 启动与自动监测优先验证外网，通过后 XHA 请求为零；主动连接、只读身份、设备分页是独立意图。
 - 请求绑定当前可确认接口与源 IPv4；取消目标 SSID/profile 选择及自动切网。IPv6-only、VPN、桥接与真实有线认证仍需实机验证。
@@ -65,6 +65,6 @@ python -m venv .venv
 
 ## 发布约定
 
-构建生成但不上传：`OUNet-0.3.4-Setup-x64.exe`、`.sha256`、`windows-update.json`。手动发布应使用 `windows-v0.3.4` 标签，同一 Release 上传三个文件；运行中的更新入口只接受该 Windows 命名规则，不混入 Android Release。
+构建生成但不上传：`OUNet-0.3.5-Setup-x64.exe`、`.sha256`、`windows-update.json`。手动发布应使用 `windows-v0.3.5` 标签，同一 Release 上传三个文件；运行中的更新入口只接受该 Windows 命名规则，不混入 Android Release。
 
 保持既有 AppId、安装目录、数据目录、自启注册名称、单实例锁和 CLI 接管标记；Android 和独立 CLI 的业务规则没有变更。

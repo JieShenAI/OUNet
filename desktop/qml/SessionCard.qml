@@ -4,12 +4,11 @@ import QtQuick.Layouts
 Panel {
     id: card
     required property var v
-    property bool showHistory: false
-    readonly property bool showValues: !!v.session.account && (!v.sessionStale || showHistory)
+    readonly property bool showValues: !!v.session.account
     signal devicesRequested()
     RowLayout {
         Layout.fillWidth: true
-        AppText { text: card.v.sessionStale && card.v.session.account ? "上次校园网会话" : "校园网会话";font.pixelSize:16;font.bold:true;Layout.fillWidth:true }
+        AppText { text:"校园网账号信息";font.pixelSize:16;font.bold:true;Layout.fillWidth:true }
         Rectangle {
             implicitWidth: stateText.implicitWidth+20;implicitHeight:28;radius:6
             color: card.v.online ? Theme.greenBg : Theme.amberBg
@@ -18,10 +17,9 @@ Panel {
     }
     ColumnLayout {
         Layout.fillWidth:true;spacing:5
-        AppText { text:"当前在线身份";color:Theme.muted;font.pixelSize:12 }
-        CopyText { text:card.showValues?card.v.session.account:"校园身份尚未读取";font.pixelSize:25;font.bold:true;Layout.fillWidth:true }
-        AppText { text:card.v.sessionStale&&card.v.session.account?"历史信息，当前连接身份尚未确认。":"外网连通性与 XHA 在线身份分别确认。";color:Theme.muted;font.pixelSize:12;Layout.fillWidth:true }
-        AppButton { visible:card.v.sessionStale&&!!card.v.session.account;text:card.showHistory?"收起上次会话":"展开上次会话";quiet:true;onTriggered:card.showHistory=!card.showHistory }
+        AppText { text:card.v.sessionStale&&card.showValues?"上次读取的校园网账号":"校园网账号";color:Theme.muted;font.pixelSize:12 }
+        CopyText { objectName:"sessionIdentity";text:card.showValues?card.v.session.account:"—";font.pixelSize:25;font.bold:true;Layout.fillWidth:true }
+        AppText { visible:!card.showValues;text:"可点击刷新获取校园网账号信息。";color:Theme.muted;font.pixelSize:12;Layout.fillWidth:true }
     }
     Rectangle { height:1;color:Theme.border;Layout.fillWidth:true }
     GridLayout {
@@ -32,7 +30,7 @@ Panel {
                 required property var modelData
                 Layout.fillWidth:true;Layout.minimumWidth:0;Layout.alignment:Qt.AlignTop;spacing:6
                 AppText { text:modelData.label;color:Theme.muted;font.pixelSize:12 }
-                CopyText { objectName:"session_"+modelData.key;text:card.showValues?(card.v.session[modelData.key]||"页面未提供"):"尚未读取";font.pixelSize:13;Layout.fillWidth:true;Layout.minimumWidth:0 }
+                CopyText { objectName:"session_"+modelData.key;text:card.showValues?(card.v.session[modelData.key]||"页面未提供"):"—";font.pixelSize:13;Layout.fillWidth:true;Layout.minimumWidth:0 }
             }
         }
     }

@@ -2,6 +2,12 @@
 
 Android 与 Windows 分别使用 `android-vX.Y.Z` 和 `windows-vX.Y.Z` 标签。
 
+## Windows 0.3.5（发布准备）
+
+- 直接显示上次读取的校园账号和六项会话信息，无需展开历史，不再显示“校园身份尚未读取”。
+- 网络变化、未登录或刷新失败时保留旧快照与原读取时间，成功读取新账号后再替换。
+- [发布说明](docs/WINDOWS_V0_3_5_RELEASE_NOTES.md) · [验证记录](docs/WINDOWS_V0_3_5_VERIFICATION.md)。
+
 ## Android 1.3.6 / Windows 0.3.4（发布准备）
 
 - 临时故障三次后自动复检，按15秒、30秒、1分钟、2分钟、5分钟逐级等待，上限后持续复检。

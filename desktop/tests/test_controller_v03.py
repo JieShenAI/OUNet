@@ -134,6 +134,32 @@ class ControllerV03(TempTest):
         self.controller.check();self.wait()
         self.assertEqual(self.controller.session['fetched_at'],'old-time')
 
+    def test_offline_refresh_preserves_last_account_fields_and_persistent_snapshot(self):
+        previous={'account':'last-online','availability':'ready','network_key':'previous-network',
+                  'fetched_at':'previous-time','online_since':'previous-login','source_ipv4':'192.0.2.8',
+                  'source_ipv6':'2001:db8::8','source_mac':'02:00:00:00:00:08','mobile_identifier':'PC端（0）'}
+        self.controller.session=dict(previous);self.controller.snapshots.save(previous)
+        self.engine.return_value.check.return_value=CheckResult('offline','offline',online=False,
+            session={'availability':'unavailable','login_state':'offline','message':'XHA 确认未登录。'})
+        self.controller.refreshSession();self.wait()
+        for key,value in previous.items():
+            if key!='availability':self.assertEqual(self.controller.session[key],value)
+        self.assertTrue(self.controller.data['sessionStale'])
+        self.assertEqual(self.controller.snapshots.read(),previous)
+        restarted=Controller(self.directory)
+        try:
+            self.assertEqual(restarted.session['account'],'last-online')
+            self.assertEqual(restarted.session['fetched_at'],'previous-time')
+        finally:restarted.cleanup();restarted.deleteLater()
+
+    def test_successful_new_identity_replaces_previous_snapshot(self):
+        self.controller.session={'account':'previous','source_ipv4':'192.0.2.1','fetched_at':'previous-time'}
+        current={'account':'new-identity','availability':'ready','source_ipv4':'192.0.2.2','fetched_at':'new-time'}
+        self.engine.return_value.check.return_value=CheckResult('online','online',online=True,session=current)
+        self.controller.refreshSession();self.wait()
+        self.assertEqual(self.controller.session,dict(current,network_key='fake'))
+        self.assertEqual(self.controller.snapshots.read(),self.controller.session)
+
     def test_cooling_campus_reads_wait_but_update_is_independent(self):
         for _ in range(3):self.controller.policy.failure('fixture')
         self.controller.refreshSession();self.controller.loadDevices(False)

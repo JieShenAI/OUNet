@@ -328,9 +328,16 @@ class Controller(QObject):
                 if self.recoveries.boot_known:self.recoveries.online(bool(result.recovery_method),result.recovery_method,result.duration,self.network_key)
                 elif result.recovery_method:self.pending_recovery={"method":result.recovery_method,"duration":result.duration}
             if result.session:
-                if result.session.get("account")!=self.session.get("account"):self.devices={}
-                self.session=dict(result.session,network_key=self.network_key)
-                self.snapshots.save(self.session)
+                if result.session.get('account'):
+                    if result.session.get("account")!=self.session.get("account"):self.devices={}
+                    self.session=dict(result.session,network_key=self.network_key)
+                    self.snapshots.save(self.session)
+                elif self.session.get('account'):
+                    # An offline/empty refresh is not a new identity. Keep the
+                    # last complete snapshot and its original network/time.
+                    self.devices={}
+                    self.session=dict(self.session,availability='stale',message=result.session.get('message',''))
+                else:self.session=dict(result.session,network_key=self.network_key)
             if result.session_error:
                 if self.session:self.session=dict(self.session,message=result.session_error)
                 else:self.session={"availability":"unavailable","message":result.session_error}
