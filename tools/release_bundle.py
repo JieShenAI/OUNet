@@ -26,7 +26,10 @@ def asset_names(platform, version):
         return packages + [p + '.sha256' for p in packages] + ['android-update.json', 'ANDROID_RELEASE_NOTES.md']
     if platform != 'windows': raise ValueError('Invalid platform')
     packages = [f'OUNet-{version}-Setup-x64.exe', f'OUNet-{version}-Windows-x64-portable.zip']
-    return packages + [p + '.sha256' for p in packages] + ['windows-update.json', 'WINDOWS_RELEASE_NOTES.md']
+    names = packages + [p + '.sha256' for p in packages] + ['windows-update.json', 'WINDOWS_RELEASE_NOTES.md']
+    if tuple(map(int, version.split('.'))) >= (0, 3, 6):
+        names.append('windows-security-scan.json')
+    return names
 
 
 def validate_files(directory, platform, version):
@@ -57,6 +60,30 @@ def validate_files(directory, platform, version):
                 or meta.get('url') != f'{REPO}/releases/download/{tag}/{setup.name}'
                 or meta.get('sha256') != digest(setup)):
             raise ValueError('Windows metadata does not describe the exact installer')
+        if 'windows-security-scan.json' in names:
+            security = json.loads((directory / 'windows-security-scan.json').read_text(encoding='utf-8-sig'))
+            if (security.get('schemaVersion') != 1 or security.get('version') != version
+                    or any(security.get(flag) is not True for flag in ('allTargetsClean', 'realTimeProtectionEnabled', 'archivesScanned', 'exclusionsIgnored'))
+                    or not security.get('engineVersion') or not security.get('signatureVersion') or not security.get('scannedAtUtc')):
+                raise ValueError('Windows security scan report is missing or failed')
+            results = security.get('results', [])
+            expected = {setup.name, f'OUNet-{version}-Windows-x64-portable.zip', 'OUNet'}
+            if len(results) != 3 or {item.get('target', {}).get('name') for item in results} != expected:
+                raise ValueError('Windows security scan has an unexpected target list')
+            for item in results:
+                target = item.get('target', {})
+                if (item.get('exitCode') != 0 or item.get('unchangedDuringScan') is not True
+                        or item.get('noThreatsDetected') is not True):
+                    raise ValueError('Windows security scan did not pass')
+                if target['name'] == 'OUNet':
+                    if (target.get('kind') != 'directory' or not target.get('fileCount')
+                            or not re.fullmatch('[a-f0-9]{64}', target.get('treeSha256', ''))):
+                        raise ValueError('Windows payload security scan identity is invalid')
+                else:
+                    package = directory / target['name']
+                    if (target.get('kind') != 'file' or target.get('size') != package.stat().st_size
+                            or target.get('sha256') != digest(package)):
+                        raise ValueError('Windows security scan describes another package')
     return names
 
 

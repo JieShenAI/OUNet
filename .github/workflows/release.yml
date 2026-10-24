@@ -74,8 +74,7 @@ jobs:
         if: inputs.platform == 'windows'
         shell: pwsh
         run: |
-          python -m venv desktop/.venv
-          desktop/.venv/Scripts/python.exe -m pip install -r desktop/requirements.lock.txt
+          ./desktop/tools/bootstrap_release.ps1
           New-Item -ItemType Directory -Force desktop/.toolchain | Out-Null
           $innoInstaller = Join-Path $env:GITHUB_WORKSPACE 'desktop/.toolchain/innosetup-6.7.3.exe'
           Invoke-WebRequest 'https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe' -OutFile $innoInstaller
@@ -86,7 +85,7 @@ jobs:
       - name: Build Windows with QML and frozen runtime checks
         if: inputs.platform == 'windows'
         shell: pwsh
-        run: ./desktop/build.ps1
+        run: ./desktop/build.ps1 -PythonPath desktop/.toolchain/release/venv/Scripts/python.exe
       - name: Validate exact release bundle
         env:
           RELEASE_PLATFORM: ${{ inputs.platform }}
