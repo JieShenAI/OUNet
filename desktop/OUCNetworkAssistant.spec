@@ -9,7 +9,7 @@ for filename in ('ffi.dll', 'libmpdec-4.dll'):
     source = Path(sys.base_prefix) / 'Library' / 'bin' / filename
     if source.exists(): extra_binaries.append((str(source), '.'))
 for filename in ('MSVCP140.dll','MSVCP140_1.dll','MSVCP140_2.dll','VCRUNTIME140.dll','VCRUNTIME140_1.dll','concrt140.dll'):
-    source = root / '.venv' / 'Lib' / 'site-packages' / 'shiboken6' / filename
+    source = Path(sys.prefix) / 'Lib' / 'site-packages' / 'shiboken6' / filename
     if source.exists(): extra_binaries.append((str(source), '.'))
 a = Analysis(
     [str(root / 'run.py')],

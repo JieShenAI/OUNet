@@ -6,7 +6,7 @@ Android 与 Windows 各自创建 Release：`android-vX.Y.Z`、`windows-vX.Y.Z`�
 
 1. 将目标代码合入 `main`，锁定 CI 通过的完整源码 SHA；提升版本并添加对应发布说明。
 2. Android 使用原正式密钥，执行 `android/build.ps1`；缺少签名配置立即失败。正式密钥和口令不得进入 Git。
-3. Windows 在独立 `.venv` 安装 `requirements.lock.txt`，使用 Inno Setup 6.7.3，执行 `desktop/build.ps1`。
+3. Windows 执行 `desktop/tools/bootstrap_release.ps1`，在全新官方 Python 环境按 `requirements-release.lock.txt` 校验摘要安装依赖；使用签名验证通过的 Inno Setup 6.7.3，执行 `desktop/build.ps1 -PythonPath desktop/.toolchain/release/venv/Scripts/python.exe`。
 4. 两端脚本生成并验证 `dist/releases/<平台标签>/`；只上传此目录中的白名单文件，不能上传历史 `dist/*`。
 5. Windows 可执行 `desktop/tools/test_upgrade_data.py --from-ref e3fc48e` 核对旧版模拟数据；该测试不等于真实安装器覆盖升级。
 
@@ -27,6 +27,8 @@ python tools/publish_release.py --bundle dist/releases/windows-v0.3.1
 发布器使用 Actions 的 `GITHUB_TOKEN`，本机则使用 Git Credential Manager 的 GitHub 凭据。凭据只保存在内存，不打印、不写发布附件。构建清单必须指向已推送的干净源码提交，且声明自动检查通过；已公开版本绝不覆盖。
 
 Android 草稿包含品牌 APK、字节相同的 `ouc-autologin-*` 兼容 APK、两份摘要、`android-update.json`、发布说明及构建清单。Windows 草稿包含 Setup、完整 portable ZIP、两份摘要、`windows-update.json`、发布说明及构建清单。
+
+Windows 0.3.6 起还必须包含 `windows-security-scan.json`。构建分别扫描程序目录、Setup 与 ZIP，保持实时保护开启，使用检查压缩包且忽略路径排除的定向扫描模式；任一发现、错误或扫描前后文件变化均阻断发布。发布器核对报告中的安装器及 ZIP 摘要，不接受其他二进制的扫描结果。扫描记录不等于微软误报复核，也不保证其他杀毒引擎或未来规则不报。
 
 ## 公开发布与验收
 

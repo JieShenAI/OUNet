@@ -2,6 +2,12 @@
 
 Android 与 Windows 分别使用 `android-vX.Y.Z` 和 `windows-vX.Y.Z` 标签。
 
+## Windows 0.3.6（构建与扫描验证中）
+
+- 保留 0.3.5 功能，使用独立官方 CPython 和官方摘要锁定的固定依赖重新构建。
+- 程序目录、Setup 和 ZIP 增加 Defender 扫描门槛及随包扫描报告，任一步失败时阻断发布。
+- [发布说明](docs/WINDOWS_V0_3_6_RELEASE_NOTES.md) · [验证记录](docs/WINDOWS_V0_3_6_VERIFICATION.md)。
+
 ## Windows 0.3.5（发布准备）
 
 - 直接显示上次读取的校园账号和六项会话信息，无需展开历史，不再显示“校园身份尚未读取”。

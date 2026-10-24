@@ -66,4 +66,48 @@ class ReleaseBundleTests(unittest.TestCase):
             self.assertEqual({k:result[k] for k in changes},changes)
 
 
+class WindowsSecurityBundleTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(dir=ROOT/'tests')
+        self.directory = Path(self.temp.name)
+        self.version = '0.3.6'
+        packages = [f'OUNet-{self.version}-Setup-x64.exe', f'OUNet-{self.version}-Windows-x64-portable.zip']
+        results = []
+        for name in packages:
+            path = self.directory/name
+            path.write_bytes(b'synthetic package for security-gate regression')
+            (self.directory/(name+'.sha256')).write_text(bundle.digest(path)+'  '+name+'\n')
+            results.append({'target': {'kind': 'file', 'name': name, 'size': path.stat().st_size, 'sha256': bundle.digest(path)},
+                            'exitCode': 0, 'unchangedDuringScan': True, 'noThreatsDetected': True})
+        results.append({'target': {'kind': 'directory', 'name': 'OUNet', 'fileCount': 3, 'treeSha256': 'a'*64},
+                        'exitCode': 0, 'unchangedDuringScan': True, 'noThreatsDetected': True})
+        (self.directory/'windows-update.json').write_text(json.dumps({'platform': 'windows-x64', 'version': self.version,
+            'url': f'{bundle.REPO}/releases/download/windows-v{self.version}/{packages[0]}', 'sha256': bundle.digest(self.directory/packages[0])}))
+        (self.directory/'WINDOWS_RELEASE_NOTES.md').write_text('Synthetic security gate fixture')
+        self.report = {'schemaVersion': 1, 'version': self.version, 'allTargetsClean': True, 'realTimeProtectionEnabled': True,
+            'archivesScanned': True, 'exclusionsIgnored': True, 'engineVersion': 'synthetic', 'signatureVersion': 'synthetic',
+            'scannedAtUtc': '2026-10-24T00:00:00Z', 'results': results}
+        self.write_report()
+    def tearDown(self):
+        self.temp.cleanup()
+    def write_report(self):
+        (self.directory/'windows-security-scan.json').write_text(json.dumps(self.report), encoding='utf-8-sig')
+    def test_current_windows_release_requires_successful_exact_scan(self):
+        self.assertIn('windows-security-scan.json', bundle.validate_files(self.directory, 'windows', self.version))
+        self.report['results'][0]['noThreatsDetected'] = False
+        self.write_report()
+        with self.assertRaisesRegex(ValueError, 'security scan'):
+            bundle.validate_files(self.directory, 'windows', self.version)
+    def test_a_clean_report_for_another_installer_cannot_authorize_publication(self):
+        self.report['results'][0]['target']['sha256'] = 'b'*64
+        self.write_report()
+        with self.assertRaisesRegex(ValueError, 'another package'):
+            bundle.validate_files(self.directory, 'windows', self.version)
+    def test_payload_or_archive_cannot_be_omitted_from_scan(self):
+        self.report['results'].pop()
+        self.write_report()
+        with self.assertRaisesRegex(ValueError, 'target list'):
+            bundle.validate_files(self.directory, 'windows', self.version)
+
+
 if __name__=='__main__':unittest.main()
