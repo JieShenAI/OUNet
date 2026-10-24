@@ -24,6 +24,10 @@ public final class LoginEngine {
         Network network=link.network;String key=WifiAccess.key(network);
         WifiTransport.Guard guard=()->{CheckCoordinator.check(context,config,ticket);if(!WifiAccess.matches(context,network,"",CheckCoordinator.foreground())||!WifiAccess.key(network).equals(key))throw new InterruptedIOException("实际Wi-Fi已变化");};
         WifiTransport transport=new WifiTransport(network,SystemClock.elapsedRealtime()+4000,guard);CheckCoordinator.transport(ticket,transport);
+        if(!ticket.userReconnect&&store.recheckDelay()>0){
+            CheckCoordinator.report(context,config,ticket,store.recheckMessage());
+            CheckCoordinator.followup(context,config,ticket,store.recheckDelay(),config.enabled?ticket.mode:RunGate.READ_ONLY,"自动恢复复检");return;
+        }
         CheckCoordinator.record(context,config,ticket,guard,()->{RecoveryRepository.get(context).connection(key);if(!key.equals(evidenceKey)||config.generation!=evidenceGeneration){evidenceKey=key;evidenceGeneration=config.generation;firstOnline=-1;proofUntil=-1;}});
         ConnectionStatus.Value previous=ConnectionStatus.get();
         SessionInfoRepository.Value identity=SessionInfoRepository.get();
@@ -56,22 +60,24 @@ public final class LoginEngine {
         catch(InterruptedIOException e){guard.check();campus.timeout(key,SystemClock.elapsedRealtime());classification=new CampusDetector.Result(false,"XHA访问超时");}
         guard.check();
         if(!classification.campus){
+            CheckCoordinator.record(context,config,ticket,guard,()->{try{store.recordTransportFailure(config);}catch(IOException e){throw new IllegalStateException(e);}});
             CheckCoordinator.publish(context,config,ticket,ConnectionStatus.State.NON_CAMPUS,key,classification.detail);SessionInfoRepository.invalidate();DeviceRepository.invalidate();
             CheckCoordinator.record(context,config,ticket,guard,()->{RecoveryRepository.get(context).connection("");firstOnline=-1;proofUntil=-1;});return;
         }
         CheckCoordinator.report(context,config,ticket,"XHA认证服务可用，正在读取登录状态");
         transport.deadline(SystemClock.elapsedRealtime()+8000);SessionInfoClient client=new SessionInfoClient(transport);SessionInfoClient.Status session;
         try{session=client.readStatus();}
-        catch(IOException e){guard.check();unknown(context,config,ticket,key,"登录状态暂无法确认："+e.getMessage());return;}
+        catch(IOException e){guard.check();store.recordTransportFailure(config);unknown(context,config,ticket,key,"登录状态暂无法确认："+e.getMessage());return;}
         guard.check();
-        if(session.auth==SessionInfoClient.Auth.UNKNOWN){unknown(context,config,ticket,key,"登录状态暂无法确认：XHA状态结果未识别");return;}
+        if(session.auth==SessionInfoClient.Auth.UNKNOWN){store.recordTransportFailure(config);unknown(context,config,ticket,key,"登录状态暂无法确认：XHA状态结果未识别");return;}
+        store.resetTransportRetry(config);
         if(session.auth==SessionInfoClient.Auth.ONLINE){present(context,config,ticket,link,key,guard,transport,client,session,ticket.userReconnect);return;}
         SessionInfoRepository.invalidate();DeviceRepository.invalidate();
         CheckCoordinator.publish(context,config,ticket,ConnectionStatus.State.OFFLINE,key,"XHA确认未登录");
         CheckCoordinator.record(context,config,ticket,guard,()->{firstOnline=-1;RecoveryRepository.get(context).offline(key,link.ssid.isEmpty()?"Wi-Fi名称不可见":link.ssid);});
         if(ticket.mode==RunGate.READ_ONLY||(ticket.mode==RunGate.AUTOMATIC&&!config.enabled))return;
         if(config.active()==null){CheckCoordinator.report(context,config,ticket,"XHA未登录，请添加并选用账号");return;}
-        if(store.retry().blocked){CheckCoordinator.report(context,config,ticket,"认证已暂停：3次明确失败；点击重新检测并连接可重置");return;}
+        if(!store.retry().canAttempt(System.currentTimeMillis())){CheckCoordinator.report(context,config,ticket,store.recheckMessage());return;}
         String password;
         try{password=store.password(config.active());}catch(Exception e){CheckCoordinator.report(context,config,ticket,"无法读取密码，请重新保存账号密码");return;}
         SessionInfoRepository.pause();DeviceRepository.pause();RequestControl.GLOBAL.authentication(true);
@@ -89,15 +95,15 @@ public final class LoginEngine {
                     if(result.error!=AuthError.NONE){
                         CheckCoordinator.publish(context,config,ticket,ConnectionStatus.State.CREDENTIAL_ERROR,key,result.error.guidance());return;
                     }
-                }
-            }catch(InterruptedIOException e){guard.check();CheckCoordinator.report(context,config,ticket,"认证请求超时，未计为明确失败");}
-            catch(IOException e){guard.check();CheckCoordinator.report(context,config,ticket,"认证结果暂无法确认："+e.getMessage());}
+                }else store.recordAuthFailure(config,System.currentTimeMillis());
+            }catch(InterruptedIOException e){guard.check();store.recordAuthFailure(config,System.currentTimeMillis());CheckCoordinator.report(context,config,ticket,"认证请求超时，将自动复检");}
+            catch(IOException e){guard.check();store.recordAuthFailure(config,System.currentTimeMillis());CheckCoordinator.report(context,config,ticket,"认证结果暂无法确认，将自动复检："+e.getMessage());}
             probes.afterAuthentication();
             transport.deadline(SystemClock.elapsedRealtime()+8000);
             try{
                 SessionInfoClient.Status refreshed=client.readStatus();guard.check();
                 if(refreshed.auth==SessionInfoClient.Auth.ONLINE)present(context,config,ticket,link,key,guard,transport,client,refreshed,true);
-                else if(refreshed.auth==SessionInfoClient.Auth.UNAUTHENTICATED)CheckCoordinator.publish(context,config,ticket,ConnectionStatus.State.OFFLINE,key,store.retry().blocked?"认证已暂停：3次明确失败；点击重新检测并连接可重置":"XHA仍未登录，可重新检测并连接");
+                else if(refreshed.auth==SessionInfoClient.Auth.UNAUTHENTICATED)CheckCoordinator.publish(context,config,ticket,ConnectionStatus.State.OFFLINE,key,store.retry().blocked?store.recheckMessage():"XHA仍未登录，将继续检测");
                 else unknown(context,config,ticket,key,"认证后登录状态暂无法确认：XHA状态结果未识别");
             }catch(IOException e){guard.check();unknown(context,config,ticket,key,"认证后登录状态暂无法确认："+e.getMessage());}
         }finally{RequestControl.GLOBAL.authentication(false);}
@@ -147,6 +153,7 @@ public final class LoginEngine {
     }
     private static void online(Context context,SettingsData config,RunGate.Ticket ticket,String key,WifiTransport.Guard guard,boolean fresh)throws Exception{
         guard.check();CheckCoordinator.publish(context,config,ticket,ConnectionStatus.State.ONLINE,key,"外网验证通过");
+        CheckCoordinator.record(context,config,ticket,guard,()->{try{new AppStore(context).connectionRecovered(config);}catch(IOException e){throw new IllegalStateException(e);}});
         if(!RecoveryRepository.get(context).hasOutage(key))return;
         long now=SystemClock.elapsedRealtime();
         if(fresh&&firstOnline>=0&&now-firstOnline>=2000){

@@ -108,7 +108,7 @@ public class StartupFlowTest {
     }
     @Test public void savedAccountCannotBypassPauseAfterRestartOrSwitch()throws Exception{
         String id=store.saveAccount(null,"test","test-student","test-pass");store.selectAccount(id);long now=System.currentTimeMillis();store.recordAuthFailure(store.config(),now-130000);store.recordAuthFailure(store.config(),now-65000);store.recordAuthFailure(store.config(),now);runCheck();
-        assertTrue(store.retry().blocked);assertFalse(calls.stream().anyMatch(u->u.contains("/login?")));assertEquals(PortalClient.HOST,calls.get(1));
+        assertTrue(store.retry().blocked);assertFalse(calls.stream().anyMatch(u->u.contains("/login?")));assertTrue(calls.isEmpty());
     }
     @Test public void cellularDefaultCannotMaskTheOnlyCaptiveWifi()throws Exception {
         ConnectivityManager manager=context.getSystemService(ConnectivityManager.class);Network expected=WifiAccess.actual(context,true).network;
@@ -140,6 +140,46 @@ public class StartupFlowTest {
     @Test public void manualReconnectResetsPauseAndAuthenticatesImmediately()throws Exception{
         savedAccount();long now=System.currentTimeMillis();for(int i=0;i<3;i++)store.recordAuthFailure(store.config(),now+i);assertTrue(store.retry().blocked);
         CheckCoordinator.reconnect(context,null);waitIdle();assertEquals(1,logins());assertFalse(store.retry().blocked);assertEquals("actual-user",SessionInfoRepository.get().info.account);
+    }
+    private void expireCooldown(String key)throws Exception{
+        android.content.SharedPreferences prefs=context.getSharedPreferences("ouc_local",0);
+        org.json.JSONObject state=new org.json.JSONObject(prefs.getString(key,""));state.put("nextRetryAt",0);
+        prefs.edit().putString(key,state.toString()).commit();
+    }
+    @Test public void automaticCooldownExpiresAndLogsInWithoutNetworkEvent()throws Exception{
+        savedAccount();store.setEnabled(true);long now=System.currentTimeMillis();
+        for(int i=0;i<3;i++)store.recordAuthFailure(store.config(),now+i);
+        runCheck(RunGate.AUTOMATIC);assertEquals(0,logins());assertTrue(calls.isEmpty());
+        expireCooldown("retry");store=new AppStore(context);runCheck(RunGate.AUTOMATIC);
+        assertEquals(1,logins());assertFalse(store.retry().blocked);
+        assertEquals("actual-user",SessionInfoRepository.get().info.account);
+    }
+    @Test public void failedHalfOpenLoginRunsOnceThenWaitsLonger()throws Exception{
+        savedAccount();store.setEnabled(true);loginResult=0;long now=System.currentTimeMillis();
+        for(int i=0;i<3;i++)store.recordAuthFailure(store.config(),now+i);
+        expireCooldown("retry");runCheck(RunGate.AUTOMATIC);assertEquals(1,logins());assertEquals(2,store.retry().level);
+        runCheck(RunGate.AUTOMATIC);assertEquals(1,logins());assertTrue(store.recheckDelay()>25000);
+    }
+    @Test public void routerUnavailableThenRestoredRecoversAfterTransportCooldown()throws Exception{
+        savedAccount();store.setEnabled(true);campus=false;
+        for(int i=0;i<3;i++)runCheck(RunGate.AUTOMATIC);
+        assertTrue(store.transportRetry().blocked);assertEquals(0,logins());
+        campus=true;int before=calls.size();runCheck(RunGate.AUTOMATIC);assertEquals(before,calls.size());
+        expireCooldown("transport_retry");runCheck(RunGate.AUTOMATIC);
+        assertEquals(1,logins());assertFalse(store.transportRetry().blocked);
+    }
+    @Test public void restoredInternetClearsOnlyTransientProtection()throws Exception{
+        savedAccount();store.setEnabled(true);long now=System.currentTimeMillis();
+        store.rememberAuthError(store.config(),AuthError.PASSWORD);
+        for(int i=0;i<3;i++)store.recordAuthFailure(store.config(),now+i);
+        expireCooldown("retry");internet=true;runCheck(RunGate.AUTOMATIC);
+        assertFalse(store.retry().blocked);assertEquals(AuthError.PASSWORD,store.authError(store.config()));assertEquals(0,logins());
+    }
+    @Test public void disabledMonitorDoesNotAuthenticateWhenCooldownExpires()throws Exception{
+        savedAccount();assertFalse(store.enabled());long now=System.currentTimeMillis();
+        for(int i=0;i<3;i++)store.recordAuthFailure(store.config(),now+i);
+        expireCooldown("retry");runCheck(RunGate.AUTOMATIC);runCheck(RunGate.READ_ONLY);
+        assertEquals(0,logins());assertFalse(store.enabled());
     }
     @Test public void publicInternetSuccessSkipsAllXhaRequestsEvenWhenPortalWouldBeUnauthenticated()throws Exception{
         savedAccount();internet=true;runCheck();assertEquals(0,xhaCalls());assertEquals(1,calls.size());assertEquals(0,logins());assertEquals(ConnectionStatus.State.ONLINE,ConnectionStatus.get().state);assertNull(SessionInfoRepository.get().info);

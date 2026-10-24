@@ -83,6 +83,7 @@ class Controller(QObject):
         try:
             self.settings = Settings.read(directory / "settings.json")
             self.policy = RequestPolicy(directory / "request-state.json")
+            self.policy.scope('authentication')
             old = directory / "retry-state.json"
             if not self.policy.path.exists() and old.exists() and core.LoginRetryGuard(old).is_blocked(): self.policy.import_legacy_pause()
             if self.credentials.path.exists():
@@ -96,6 +97,7 @@ class Controller(QObject):
             if (directory / "configuration.pending.json").exists(): self.startup_error = "上次配置保存未完成，已停止认证，请重新保存账号。"
             if not demo: self.autostart = self.startup.enabled()
         except (StorageError, core.RetryStateError, OSError):
+            self.policy=None
             self.startup_error = "本地设置、凭据或请求状态异常，请检查数据目录并重新保存配置。"
         try: self.recoveries = RecoveryStore(directory / "recoveries.json")
         except StorageError as error: self.system_warning = str(error)
@@ -119,12 +121,14 @@ class Controller(QObject):
                 self.recoveries.observe_offline(); self.recoveries.online(True,"校园网认证恢复",duration)
 
     @property
-    def blocked(self): return self.policy is None or self.policy.paused
+    def blocked(self): return self.policy is None or self.policy.recovery_paused
     @property
-    def failures(self): return self.policy.failures if self.policy else 0
+    def failures(self): return max(self.policy.failures,self.policy.scope('authentication').failures) if self.policy else 0
     def _pause_message(self):
         if self.policy is None: return "网络请求状态无法读取，已停止请求，请检查本地数据。"
-        return "旧版暂停待处理，请手动重试。" if self.policy.state["legacy_pause"] else "连续 3 次网络请求失败，已停止自动网络请求。"
+        if self.policy.hard_paused:return self.policy.pause_message()
+        if not self.settings.monitor and not self.policy.state['legacy_pause']:return '暂时暂停；自动守护已关闭，开启后将自动复检。'
+        return self.policy.pause_message()
     def _selected_name(self):
         self.username = next((a["username"] for a in self.accounts if a["id"] == self.settings.active_account_id), "")
     def _credential_error(self):
@@ -132,13 +136,14 @@ class Controller(QObject):
         return self.policy.credential_error(a.get("id", ""), a.get("revision", "legacy")) if self.policy else ""
     def _schedule(self):
         self.timer.stop()
-        if self.initialized and self.settings.monitor and not self.blocked and not self.busy and not self.demo and not self.quitting:
-            self.timer.start(self.settings.interval_ms)
+        if (self.initialized and self.settings.monitor and not self.busy and not self.demo and not self.quitting
+                and self.policy is not None and not self.policy.hard_paused):
+            self.timer.start(max(1000,int(self.policy.retry_seconds*1000)+1) if self.blocked else self.settings.interval_ms)
 
     @Property("QVariantMap", notify=changed)
     def data(self):
         titles = {"checking":"正在检查连接…","authenticating":"正在恢复校园网…","session":"正在读取校园会话…",
-                  "online":"外网可用","offline":"外网暂不可用","protected":"自动网络请求已暂停","setup":"请添加并选用账号",
+                  "online":"外网可用","offline":"外网暂不可用","protected":"临时暂停，等待自动复检","setup":"请添加并选用账号",
                   "credentials":"需要更新账号密码","migration":"旧入口待处理","error":"需要处理设置","network":"请确认当前连接","unknown":"登录状态待确认","noncampus":"非校园网 · XHA 不可达","campusUnavailable":"校园服务暂不可用"}
         stale = self.session.get("availability") != "ready" or self.session.get("network_key") != self.network_key or self.online is not True or self.blocked
         policy_state = self.policy.state if self.policy else {}
@@ -147,6 +152,7 @@ class Controller(QObject):
                 "busy":self.busy,"configurationBusy":self.busy and self.configuration_operation,
                 "reconnecting":self.busy and self.active_intent=="reconnect","configured":self.settings.configured,"monitor":self.settings.monitor,
                 "blocked":self.blocked,"failures":self.failures,"legacyPause":policy_state.get("legacy_pause",False),
+                "retryAutomatic":bool(self.policy and not self.policy.hard_paused and self.settings.monitor),
                 "pauseMessage":self._pause_message() if self.blocked else "", "lastFailureAt":policy_state.get("last_failure_at",""),
                 "lastRequestError":policy_state.get("last_error",""),"online":self.online is True,"onlineKnown":self.online is not None,
                 "ssid":"","profile":"","interfaceId":"","wifi":self.current_wifi or "正在确认当前连接","networkKind":self.connection_kind,
@@ -276,8 +282,8 @@ class Controller(QObject):
         if self.busy:
             if intent!="auto" and self.active_intent=="auto" and not self.pending_intent:self.pending_intent=intent
             self.pending=True;return
-        if self.blocked and not retry:
-            self.status,self.message="protected",self._pause_message();self.changed.emit();return
+        if self.blocked and not retry and (self.policy is None or self.policy.hard_paused or self.policy.retry_seconds>0):
+            self.status,self.message="protected",self._pause_message();self.changed.emit();self._schedule();return
         if self.policy is None:return
         options,epoch=replace(self.settings),self.network_epoch
         account=next((a for a in self.accounts if a["id"]==options.active_account_id),{})
@@ -293,12 +299,14 @@ class Controller(QObject):
                     username,password=self.credentials.read(options.active_account_id)
                     config=core.Config(username,password,"","",max(1,options.interval_ms//1000))
                 except StorageError:pass
-            if retry:self.policy.begin_trial()
+            if retry:
+                self.policy.begin_trial();self.policy.scope('authentication').begin_trial()
             try:
                 result=MonitorEngine(self.policy,cancel=self.cancel,on_offline=lambda:self._offline(context.key)).check(
                     config,False,False,allow_auth,progress,False,"",credential_allowed,intent=intent,context=context)
                 return result,context
-            finally:self.policy.trial=False
+            finally:
+                self.policy.trial=False;self.policy.scope('authentication').trial=False
         def done(value):
             result,context=value
             if epoch!=self.network_epoch or self.cancel.is_set():
@@ -329,7 +337,7 @@ class Controller(QObject):
             if result.online is False and self.session:self.session=dict(self.session,availability="stale")
             if self.blocked:self.pending=self.pending_check=False;self.pending_intent=""
             self._log("success" if result.online else "warning",result.message)
-            title=result.credential_message if result.credential_rejected else "自动网络请求已暂停" if self.blocked else "网络已恢复" if result.recovery_method else ""
+            title=result.credential_message if result.credential_rejected else "网络暂时暂停，将自动复检" if self.blocked else "网络已恢复" if result.recovery_method else ""
             event_key=title+options.active_account_id+account.get("revision","")
             if result.recovery_method:
                 events=self.recoveries.view()["events"] if self.recoveries else []
@@ -487,9 +495,7 @@ class Controller(QObject):
     @Slot()
     def checkUpdate(self):
         if self.busy:return
-        if self.blocked:
-            self.update_info={"state":"paused","message":self._pause_message()+" 本次未检查更新，可打开 GitHub 下载页。"}
-            self.changed.emit();self.notice.emit(self._pause_message());return
+        if self.policy is None:self.notice.emit('本地请求状态异常，可打开 GitHub 下载页。');return
         if self.demo:self.update_info={"message":"演示模式不检查远程版本。"};self.changed.emit();return
         now=time.monotonic()
         if self.last_update_check is not None and now-self.last_update_check<60:
@@ -509,7 +515,6 @@ class Controller(QObject):
     @Slot()
     def openUpdate(self):
         from .update import validate_metadata
-        if self.blocked:self.notice.emit(self._pause_message());return
         try:
             value=validate_metadata(dict(self.update_info,platform="windows-x64"))
             if value["newer"] and not QDesktopServices.openUrl(QUrl(value["url"])):
@@ -576,12 +581,16 @@ class Controller(QObject):
         self.network_epoch+=1;self.devices={};self.online=None;self.network_key=""
         if self.session:self.session=dict(self.session,availability="stale")
         if self.busy:
-            self.cancel.set();self.pending_intent="auto" if self.settings.monitor and not self.blocked else "local"
+            self.cancel.set();self.pending_intent="local"
         else:self.timer.stop();self.debounce.start()
         self.changed.emit()
     @Slot()
     def _event_check(self):
-        if self.settings.monitor and not self.blocked:self.check()
+        if self.settings.monitor and self.policy is not None and not self.policy.hard_paused:
+            try:self.policy.expedite()
+            except StorageError as error:
+                self.status,self.message='error',str(error);self.notice.emit(self.message);self.changed.emit();return
+            self.check()
         else:
             def done(context):self.current_wifi=context.ssid or context.name if context.valid else context.reason
             self._submit(lambda progress:current_context(),done)

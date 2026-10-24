@@ -126,15 +126,42 @@ public final class AppStore {
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).setUserAuthenticationRequired(false).build());generator.generateKey();
         }return(SecretKey)store.getKey(KEY,null);
     }
-    public RetryPolicy retry()throws IOException{
+    public RetryPolicy retry()throws IOException{return retry("retry");}
+    RetryPolicy transportRetry()throws IOException{return retry("transport_retry");}
+    private RetryPolicy retry(String key)throws IOException{
         synchronized(LOCK){
-            migrateRetry();
-            Object raw=storage.all().get("retry");if(raw==null||raw.equals(""))return RetryPolicy.empty();
-            try{JSONObject state=new JSONObject((String)raw);if(state.getInt("version")!=2)throw new IllegalArgumentException();
+            migrateRetry();Object raw=storage.all().get(key);if(raw==null||raw.equals(""))return RetryPolicy.empty();
+            try{JSONObject state=new JSONObject((String)raw);int version=state.getInt("version");if(version!=2&&version!=3)throw new IllegalArgumentException();
                 JSONArray array=state.getJSONArray("failures");List<Long> attempts=new ArrayList<>();for(int i=0;i<array.length();i++)attempts.add(array.getLong(i));
-                return new RetryPolicy(attempts,state.getBoolean("blocked"));
-            }catch(Exception e){throw new IOException("失败保护记录异常，请排查后手动重置");}
+                RetryPolicy policy=version==2?new RetryPolicy(attempts,state.getBoolean("blocked")):new RetryPolicy(attempts,state.getBoolean("blocked"),state.getInt("level"),state.getLong("nextRetryAt"));
+                long now=System.currentTimeMillis();
+                if(policy.blocked&&policy.nextRetryAt>now+RetryPolicy.DELAYS_MS[policy.level-1]){
+                    policy=new RetryPolicy(policy.failures,true,policy.level,now+RetryPolicy.DELAYS_MS[policy.level-1]);saveRetry(key,policy);
+                }else if(version==2)saveRetry(key,policy);
+                return policy;
+            }catch(IOException e){throw e;}catch(Exception e){throw new IOException("失败保护记录异常，请排查后手动重置");}
         }
+    }
+    private void saveRetry(String key,RetryPolicy policy)throws IOException{
+        try{put(key,new JSONObject().put("version",3).put("blocked",policy.blocked).put("failures",new JSONArray(policy.failures))
+                .put("level",policy.level).put("nextRetryAt",policy.nextRetryAt).toString());}
+        catch(org.json.JSONException e){throw new IOException("无法保存复检状态，停止请求");}
+    }
+    long recheckDelay()throws IOException{long now=System.currentTimeMillis();return Math.max(retry().remainingMillis(now),transportRetry().remainingMillis(now));}
+    String recheckMessage()throws IOException{return "暂时暂停，"+Math.max(1,(recheckDelay()+999)/1000)+"秒后自动复检；恢复后继续守护";}
+    void expediteRetry()throws IOException{
+        synchronized(LOCK){long now=System.currentTimeMillis();Object raw=storage.all().get("retry_early_at");long last=raw instanceof Long?(Long)raw:0;
+            RetryPolicy auth=retry(),network=transportRetry();if(!auth.blocked&&!network.blocked)return;
+            if(now>=last&&now-last<15000)return;
+            if(auth.blocked)saveRetry("retry",auth.expedite(now));if(network.blocked)saveRetry("transport_retry",network.expedite(now));
+            put("retry_early_at",now);
+        }
+    }
+    void connectionRecovered(SettingsData expected)throws IOException{
+        synchronized(LOCK){if(!isCurrent(expected))throw new IOException("配置已变更");if(!storage.all().containsKey("retry")&&!storage.all().containsKey("transport_retry"))return;Map<String,Object> updates=new HashMap<>();updates.put("retry",null);updates.put("transport_retry",null);commit(updates);}
+    }
+    void resetTransportRetry(SettingsData expected)throws IOException{
+        synchronized(LOCK){if(!isCurrent(expected))throw new IOException("配置已变更");if(storage.all().containsKey("transport_retry"))put("transport_retry",null);}
     }
     private void migrateRetry()throws IOException{
         Map<String,?> all=storage.all();if(Integer.valueOf(2).equals(all.get("retry_schema")))return;
@@ -143,15 +170,14 @@ public final class AppStore {
         if(all.get("last_auth_at")!=null)updates.put("auth_v1_history",all.get("last_auth_at"));
         updates.put("retry",null);updates.put("last_auth_at",null);updates.put("retry_schema",2);commit(updates);
     }
-    public RetryPolicy recordAuthFailure(SettingsData expected,long now)throws IOException{
+    public RetryPolicy recordAuthFailure(SettingsData expected,long now)throws IOException{return recordFailure("retry",expected,now);}
+    void recordTransportFailure(SettingsData expected)throws IOException{recordFailure("transport_retry",expected,System.currentTimeMillis());}
+    private RetryPolicy recordFailure(String key,SettingsData expected,long now)throws IOException{
         synchronized(LOCK){
             if(!isCurrent(expected))throw new IOException("配置已变更，取消旧轮认证");
-            RetryPolicy previous=retry();
-            if(previous.blocked)throw new IOException("认证已暂停：请先排查网络或账号，再手动重置");
-            RetryPolicy next=previous.recordFailure(now);
-            try{Map<String,Object> updates=new HashMap<>();updates.put("retry",new JSONObject().put("version",2).put("blocked",next.blocked).put("failures",new JSONArray(next.failures)).toString());
-                commit(updates);return next;
-            }catch(org.json.JSONException e){throw new IOException("无法保存失败保护记录，停止请求");}
+            RetryPolicy previous=retry(key);
+            if(!previous.canAttempt(now))throw new IOException("暂时暂停，等待自动复检");
+            RetryPolicy next=previous.recordFailure(now);saveRetry(key,next);return next;
         }
     }
     private static String credentialId(SettingsData.Account account){
@@ -168,7 +194,7 @@ public final class AppStore {
             try{put("credential_error",error==AuthError.NONE?null:new JSONObject().put("version",1).put("account",config.activeId).put("credential",credentialId(config.active())).put("kind",error.name()).toString());}
             catch(org.json.JSONException e){throw new IOException("无法保存认证错误提示");}}
     }
-    public void resetRetry()throws IOException{synchronized(LOCK){migrateRetry();Map<String,?> all=storage.all();if(!all.containsKey("retry")&&!all.containsKey("last_auth_at")&&!all.containsKey("credential_error"))return;Map<String,Object> updates=new HashMap<>();updates.put("retry",null);updates.put("last_auth_at",null);updates.put("credential_error",null);commit(updates);}}
+    public void resetRetry()throws IOException{synchronized(LOCK){migrateRetry();Map<String,?> all=storage.all();if(!all.containsKey("retry")&&!all.containsKey("last_auth_at")&&!all.containsKey("credential_error")&&!all.containsKey("transport_retry"))return;Map<String,Object> updates=new HashMap<>();updates.put("retry",null);updates.put("last_auth_at",null);updates.put("credential_error",null);updates.put("transport_retry",null);commit(updates);}}
     public void resetRetry(SettingsData expected)throws IOException{synchronized(LOCK){if(!isCurrent(expected))throw new IOException("配置已变更，不清除旧轮失败记录");resetRetry();}}
     public void repairSettings()throws IOException{
         synchronized(LOCK){Map<String,Object> updates=new HashMap<>();updates.put("settings_v2_recovery",storage.all().get("settings_v2"));

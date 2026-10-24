@@ -1,4 +1,4 @@
-"""One outcome per actual HTTP request; persistent three-failure circuit breaker."""
+"""Scoped HTTP outcomes and persistent, bounded recovery cooldowns."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import threading
 import time
+import math
 from collections import deque
 from urllib.parse import urlsplit
 
@@ -53,12 +54,19 @@ class RequestStats:
 
 
 class RequestPolicy:
-    def __init__(self, path: Path):
+    DELAYS = (15, 30, 60, 120, 300)
+
+    def __init__(self, path: Path, clock=time.time, monotonic=time.monotonic):
         self.path = path
+        self.clock, self.monotonic = clock, monotonic
+        self.deadline = 0
+        self.last_early = float('-inf')
+        self.children = {}
+        self.storage_failed = False
         self.trial = False
         self.state = {"version": 1, "failures": 0, "paused": False,
                       "last_failure_at": "", "last_error": "", "legacy_pause": False,
-                      "rejected_accounts": []}
+                      "rejected_accounts": [], "retry_level": 0, "retry_at": 0}
         self.stats = RequestStats()
         if path.exists():
             try:
@@ -71,12 +79,63 @@ class RequestPolicy:
                         or any(not isinstance(data.get(k, ""), str) for k in ("last_failure_at", "last_error"))):
                     raise ValueError
                 self.state.update(data)
+                if (type(self.state['retry_level']) is not int or not 0 <= self.state['retry_level'] <= len(self.DELAYS)
+                        or type(self.state['retry_at']) not in (int,float) or not math.isfinite(self.state['retry_at'])
+                        or self.state['retry_at'] < 0):
+                    raise ValueError
                 errors = self.state.get("credential_errors", {})
                 if not isinstance(errors, dict) or any(not isinstance(k, str) or not isinstance(v, dict)
                        or not all(isinstance(v.get(f), str) for f in ("revision", "message")) for k,v in errors.items()):
                     raise ValueError
             except (OSError, ValueError, TypeError, AttributeError):
                 raise StorageError("网络请求状态无法读取，已停止请求。请检查本地数据。") from None
+        if self.paused and not self.state['legacy_pause']:
+            # Old persistent pauses become a bounded first cooldown on upgrade.
+            if not self.state['retry_level']:
+                self._save(retry_level=1,retry_at=self.clock()+self.DELAYS[0])
+            limit=self.DELAYS[self.state['retry_level']-1]
+            self.deadline=self.monotonic()+min(limit,max(0,self.state['retry_at']-self.clock()))
+
+    def scope(self, name):
+        if name not in ('external','update','authentication'): raise ValueError('Unknown request scope')
+        if name not in self.children:
+            try:self.children[name]=RequestPolicy(self.path.with_name(self.path.stem+'-'+name+self.path.suffix),self.clock,self.monotonic)
+            except StorageError:
+                self.storage_failed=True;raise
+        return self.children[name]
+
+    @property
+    def recovery_paused(self): return self.hard_paused or self.paused or self.scope('authentication').paused
+
+    @property
+    def hard_paused(self):
+        auth=self.children.get('authentication')
+        return self.storage_failed or self.state['legacy_pause'] or bool(auth and auth.storage_failed)
+
+    @property
+    def retry_seconds(self):
+        return max(self.remaining,self.scope('authentication').remaining)
+
+    @property
+    def remaining(self):
+        return max(0,self.deadline-self.monotonic()) if self.paused and not self.state['legacy_pause'] else 0
+
+    def pause_message(self):
+        if self.hard_paused and not self.state['legacy_pause']:return '本地复检状态无法保存，已停止请求，请检查本地数据。'
+        if self.state['legacy_pause']: return '旧版暂停待处理，请手动重试。'
+        auth=self.children.get('authentication')
+        seconds=max(self.remaining,auth.remaining if auth else 0)
+        return f'暂时暂停，{max(1,math.ceil(seconds))} 秒后自动复检；恢复后继续守护。'
+
+    def expedite(self):
+        now=self.monotonic()
+        if now-self.last_early<15:return
+        if not self.paused and not any(child.paused for child in self.children.values()):return
+        self.last_early=now
+        if self.paused and not self.state['legacy_pause'] and not self.storage_failed:
+            self.deadline=now
+            self._save(retry_at=self.clock())
+        for child in self.children.values(): child.expedite()
 
     @property
     def failures(self): return self.state["failures"]
@@ -91,26 +150,34 @@ class RequestPolicy:
         except StorageError:
             self.state["paused"] = True
             self.trial = False
+            self.storage_failed = True
             raise
         self.state = data
 
     def before_request(self):
+        if self.storage_failed:raise RequestsPaused('本地复检状态异常，已停止请求。')
         if self.paused and not self.trial:
-            raise RequestsPaused("网络请求已暂停，请手动重试。")
+            if not self.state['legacy_pause'] and self.remaining<=0:self.begin_trial()
+            else:raise RequestsPaused(self.pause_message())
 
     def begin_trial(self):
         self.trial = self.paused
 
     def success(self):
         if self.failures or self.paused:
-            self._save(failures=0, paused=False, legacy_pause=False)
+            self._save(failures=0, paused=False, legacy_pause=False,retry_level=0,retry_at=0)
+        self.deadline=0
         self.trial = False
 
     def failure(self, message):
+        was_paused=self.paused
         failures = 3 if self.trial else min(3, self.failures + 1)
         self.trial = False
-        self._save(failures=failures, paused=failures == 3,
+        level=min(len(self.DELAYS),self.state['retry_level']+1) if was_paused else 1 if failures==3 else 0
+        delay=self.DELAYS[level-1] if level else 0
+        self._save(failures=failures, paused=failures == 3,retry_level=level,retry_at=self.clock()+delay if delay else 0,
                    last_failure_at=now_text(), last_error=message)
+        self.deadline=self.monotonic()+delay
 
     def import_legacy_pause(self):
         self._save(paused=True, legacy_pause=True)
@@ -152,11 +219,13 @@ class RequestClient:
         self.session.mount("http://", adapter or HTTPAdapter(max_retries=0))
 
     def get(self, url, stage, decoder=lambda text, response: text, params=None, probe=False, headers=None, accept_redirect=False, deadline=None):
-        self.policy.before_request()
         if self.cancel.is_set():
             raise RequestsPaused("当前检查已停止。")
         if self.network_guard and not self.network_guard():
             raise RequestsPaused("连接接口已经变化，本轮结果已丢弃。")
+        host=urlsplit(url).hostname or ''
+        policy=self.policy.scope('update') if host in ('api.github.com','github.com') or host.endswith('.githubusercontent.com') else self.policy.scope('external') if probe else self.policy
+        policy.before_request()
         try:
             timeout = self.timeout
             if deadline is not None:
@@ -199,7 +268,11 @@ class RequestClient:
         except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
             message = f"{stage}：HTTP 服务异常或响应格式无效。"
         else:
-            self.policy.success()
+            try:policy.success()
+            except StorageError:
+                self.policy.storage_failed=True;raise
             return value
-        self.policy.failure(message)
+        try:policy.failure(message)
+        except StorageError:
+            self.policy.storage_failed=True;raise
         raise RequestFailure(message)

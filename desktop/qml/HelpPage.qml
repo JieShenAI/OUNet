@@ -40,8 +40,8 @@ ColumnLayout {
         Layout.fillWidth:true
         AppText {text:"了解与更新 OUNet";font.pixelSize:16;font.bold:true}
         Repeater {model:[{key:"intro",title:"软件介绍"},{key:"privacy",title:"数据使用说明"},{key:"copyright",title:"版权与第三方许可"}];AppButton {required property var modelData;text:modelData.title+"  →";quiet:true;onTriggered:page.detailsRequested(modelData.key)}}
-        RowLayout {Layout.fillWidth:true;AppText {text:"当前版本 "+page.v.version;Layout.fillWidth:true} AppButton {objectName:"checkUpdateButton";text:"检查 Windows 更新";busy:page.v.busy;enabled:!page.v.blocked;onTriggered:{page.detailsRequested("update");Backend.checkUpdate()}}}
-        AppText {text:page.v.blocked?"网络请求已暂停，暂不能检查版本；仍可使用浏览器访问下载页。":"检查本平台最新正式版，下载后先退出托盘进程，再运行安装器覆盖升级。";font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true}
+        RowLayout {Layout.fillWidth:true;AppText {text:"当前版本 "+page.v.version;Layout.fillWidth:true} AppButton {objectName:"checkUpdateButton";text:"检查 Windows 更新";busy:page.v.busy;onTriggered:{page.detailsRequested("update");Backend.checkUpdate()}}}
+        AppText {text:"检查本平台最新正式版，下载后先退出托盘进程，再运行安装器覆盖升级。";font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true}
         CopyText {text:page.v.releasesUrl||"";Layout.fillWidth:true;font.pixelSize:12}
         RowLayout {Layout.fillWidth:true
             AppButton {objectName:"openReleasesButton";text:"GitHub 下载页 ↗";quiet:true;onTriggered:Backend.openProjectLink("releases")}

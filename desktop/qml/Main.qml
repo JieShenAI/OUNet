@@ -109,7 +109,7 @@ ApplicationWindow {
                         color:v.blocked||v.migrationPending?Theme.amberBg:Theme.redBg;padding:16
                         RowLayout {
                             Layout.fillWidth:true;spacing:14
-                            ColumnLayout {Layout.fillWidth:true;spacing:4;AppText {text:v.blocked?"自动网络请求已暂停":v.migrationPending?"旧入口待处理":v.credentialError||v.title;color:v.blocked||v.migrationPending?Theme.amber:Theme.red;font.bold:true;Layout.fillWidth:true} AppText {text:v.blocked?v.pauseMessage:v.migrationPending?"请核对原脚本入口，再由桌面版接管。":v.credentialError?"这组凭据的自动 XHA 请求已停止。外网可用不代表密码正确。":v.message;font.pixelSize:12;color:v.blocked||v.migrationPending?Theme.amber:Theme.red;Layout.fillWidth:true}}
+                            ColumnLayout {Layout.fillWidth:true;spacing:4;AppText {text:v.blocked?(v.retryAutomatic?"网络暂时暂停，将自动复检":"网络请求已暂停"):v.migrationPending?"旧入口待处理":v.credentialError||v.title;color:v.blocked||v.migrationPending?Theme.amber:Theme.red;font.bold:true;Layout.fillWidth:true} AppText {text:v.blocked?v.pauseMessage:v.migrationPending?"请核对原脚本入口，再由桌面版接管。":v.credentialError?"这组凭据的自动 XHA 请求已停止。外网可用不代表密码正确。":v.message;font.pixelSize:12;color:v.blocked||v.migrationPending?Theme.amber:Theme.red;Layout.fillWidth:true}}
                             AppButton {objectName:"retryRequestsButton";visible:v.blocked;text:"手动重试";busy:v.busy;onTriggered:Backend.retryRequests()}
                             AppButton {visible:!v.blocked&&!v.migrationPending&&!!v.credentialError;text:"修改密码";busy:v.busy;onTriggered:{accountsPage.load(v.activeAccountId);root.go("account")}}
                             AppButton {visible:v.migrationPending&&!v.blocked;text:"核对旧入口";busy:v.busy;onTriggered:Backend.rescanLegacy()}
@@ -124,7 +124,7 @@ ApplicationWindow {
             }
             Rectangle {
                 Layout.fillWidth:true;implicitHeight:32;color:Theme.sub
-                RowLayout {anchors.fill:parent;anchors.leftMargin:24;anchors.rightMargin:24;AppText {text:v.busy?"●  正在处理，请等待本轮完成":v.blocked?"●  自动请求已暂停":v.monitor?"●  自动监测运行中":"●  自动监测已关闭";font.pixelSize:11;color:v.blocked?Theme.amber:Theme.muted;Layout.fillWidth:true} AppText {visible:root.width>800;text:"本地保存 · HTTPS 认证";font.pixelSize:11;color:Theme.muted}}
+                RowLayout {anchors.fill:parent;anchors.leftMargin:24;anchors.rightMargin:24;AppText {text:v.busy?"●  正在处理，请等待本轮完成":!v.monitor?"●  自动监测已关闭":v.blocked?(v.retryAutomatic?"●  等待网络复检":"●  等待手动处理"):"●  自动监测运行中";font.pixelSize:11;color:v.blocked?Theme.amber:Theme.muted;Layout.fillWidth:true} AppText {visible:root.width>800;text:"本地保存 · HTTPS 认证";font.pixelSize:11;color:Theme.muted}}
             }
         }
     }
@@ -161,7 +161,7 @@ ApplicationWindow {
                     AppText {visible:root.detailKey==="update";text:root.v.updateInfo.message||"正在检查…";Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}
                     AppText {visible:root.detailKey==="update"&&!!root.v.updateInfo.checkedAt;text:"检查时间："+(root.v.updateInfo.checkedAt||"");font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}
                     CopyText {visible:root.detailKey==="update"&&!!root.v.updateInfo.sha256;text:"版本："+(root.v.updateInfo.version||"")+"\nSHA-256："+(root.v.updateInfo.sha256||"")+"\n"+(root.v.updateInfo.notes||"");font.pixelSize:12;Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}
-                    AppButton {visible:root.detailKey==="update"&&!!root.v.updateInfo.newer;text:"在浏览器下载安装包 ↗";enabled:!v.blocked;Layout.leftMargin:22;onTriggered:Backend.openUpdate()}
+                    AppButton {visible:root.detailKey==="update"&&!!root.v.updateInfo.newer;text:"在浏览器下载安装包 ↗";Layout.leftMargin:22;onTriggered:Backend.openUpdate()}
                     AppText {visible:root.detailKey==="update";text:"来源：GitHub · JieShenAI/OUNet\n下载完成后退出主窗口和托盘进程，再运行安装器。SHA-256 为发布文件摘要，应用不会自动安装。";font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}
                     AppButton {visible:root.detailKey==="update";text:"GitHub 下载页 ↗";quiet:true;Layout.leftMargin:22;onTriggered:Backend.openProjectLink("releases")}
                     AppText {visible:v.status==="error"||v.blocked;text:v.blocked?v.pauseMessage:v.message;color:Theme.amber;font.pixelSize:12;Layout.fillWidth:true;Layout.leftMargin:22;Layout.rightMargin:22}

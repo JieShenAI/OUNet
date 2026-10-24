@@ -86,6 +86,35 @@ class ControllerV03(TempTest):
             self.assertFalse(self.controller.data['configurationBusy'])
         finally:released.set()
 
+    def test_cooldown_keeps_timer_and_resumes_without_network_event(self):
+        self.controller.initialized=True;self.controller.settings.monitor=True
+        for _ in range(3):self.controller.policy.failure('router unavailable')
+        self.controller._schedule()
+        self.assertTrue(self.controller.timer.isActive())
+        self.assertGreater(self.controller.timer.interval(),13000)
+        self.controller.check();self.engine.assert_not_called()
+        self.controller.policy.deadline=time.monotonic()-1
+        def restored(*args,**kwargs):
+            self.controller.policy.success();return CheckResult('online','restored',online=True)
+        self.engine.return_value.check.side_effect=restored
+        self.controller.check();self.wait()
+        self.engine.return_value.check.assert_called_once()
+        self.assertFalse(self.controller.blocked);self.assertEqual(self.controller.timer.interval(),1000)
+
+    def test_network_events_allow_one_early_trial_but_disabled_monitor_stays_off(self):
+        self.controller.initialized=True;self.controller.settings.monitor=True
+        for _ in range(3):self.controller.policy.failure('router unavailable')
+        def still_offline(*args,**kwargs):
+            self.controller.policy.before_request();self.controller.policy.failure('still offline')
+            return CheckResult('protected','waiting',blocked=True)
+        self.engine.return_value.check.side_effect=still_offline
+        self.controller._event_check();self.wait()
+        self.controller._event_check();self.wait()
+        self.assertEqual(self.engine.return_value.check.call_count,1)
+        self.controller.settings.monitor=False;self.controller._schedule()
+        self.controller._event_check();self.wait()
+        self.assertEqual(self.engine.return_value.check.call_count,1);self.assertFalse(self.controller.timer.isActive())
+
     def test_same_password_and_rename_do_not_clear_credential_block(self):
         revision=self.controller.accounts[0]['revision']
         self.controller.policy.reject_credential(self.first,revision,'密码错误')
@@ -105,10 +134,12 @@ class ControllerV03(TempTest):
         self.controller.check();self.wait()
         self.assertEqual(self.controller.session['fetched_at'],'old-time')
 
-    def test_paused_read_only_entries_cannot_dispatch(self):
+    def test_cooling_campus_reads_wait_but_update_is_independent(self):
         for _ in range(3):self.controller.policy.failure('fixture')
-        self.controller.refreshSession();self.controller.loadDevices(False);self.controller.checkUpdate()
+        self.controller.refreshSession();self.controller.loadDevices(False)
         self.assertFalse(self.controller.busy);self.engine.assert_not_called()
+        with patch('ouc_desktop.update.check_update',return_value={'state':'empty'}) as lookup:
+            self.controller.checkUpdate();self.wait();lookup.assert_called_once()
 
     def test_public_project_links_work_while_paused_and_report_handler_failure(self):
         for _ in range(3):self.controller.policy.failure('fixture')

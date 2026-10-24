@@ -168,6 +168,12 @@ def main():
         backend.status="protected";backend.changed.emit();settle();assert find("retryRequestsButton").property("visible")
         backend.toggleMonitor();backend.toggleMonitor();assert backend.blocked
         capture("requests-paused")
+        invoke(window,'go','account');invoke(find('accountEditor'),'load','')
+        draft=find('accountUsername');draft.forceActiveFocus();settle()
+        backend.configuration_operation=False;backend.busy=True;backend.changed.emit();settle()
+        QTest.keyClick(window,Qt.Key.Key_2);settle()
+        assert draft.property('text')=='2' and draft.hasActiveFocus(),'Recovery status interrupted account input'
+        backend.busy=False;backend.changed.emit();settle();invoke(find('accountEditor'),'load','demo2');invoke(window,'go','overview')
         backend.policy.success();backend.policy.clear_credential("demo2");backend.changed.emit()
         invoke(window,"openDetails","devices")
         assert backend.devices.get('items'),"Device drawer not connected to backend"
@@ -204,6 +210,7 @@ def main():
         report={"accountSelectionDoesNotChangeOnlineIdentity":True,"passwordPlaceholderOnly":True,
                 "busyBlocksInputWithoutFlicker":True,"stableButtonsDuringAutomaticChecks":True,"accountDelegatesPreserved":True,"unsavedInputSurvivesRefresh":True,
                 "accountKeyboardInputSurvivesChecks":True,"accountImeSurvivesChecks":True,"accountMutationLocksEditor":True,"fractionalSeconds":True,
+                "automaticRecoveryNoticePreservesEditing":True,
                 "pausePersists":True,"primaryTextContrast":True,"darkTheme":True,"deviceDrawer":True,
                 "latestLogsFirst":True,"widths":[1440,1200,1008,820,640],"qmlWarnings":warnings,
                 "realNetwork":False,"realUserData":False}

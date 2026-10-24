@@ -88,7 +88,8 @@ public class AppStoreTest {
         Fixture f=new Fixture();String a=f.add("a","p"),b=f.add("b","q");f.store.selectAccount(a);
         f.store.recordAuthFailure(f.store.config(),100000);f.store.selectAccount(b);f.store.recordAuthFailure(f.store.config(),160000);
         f.add("c","r");f.store.recordAuthFailure(f.store.config(),220000);assertTrue(f.store.retry().blocked);
-        f.store.selectAccount(a);rejects(()->f.store.recordAuthFailure(f.store.config(),10000000));assertTrue(f.store.retry().blocked);
+        f.store.selectAccount(a);rejects(()->f.store.recordAuthFailure(f.store.config(),220001));assertTrue(f.store.retry().blocked);
+        f.store.recordAuthFailure(f.store.config(),235000);assertEquals(2,f.store.retry().level);
     }
     @Test public void staleSnapshotCannotReserveOrClearNewBudget()throws Exception {
         Fixture f=new Fixture();f.add("a","p");SettingsData old=f.store.config();f.store.setTarget("Campus");
@@ -130,4 +131,19 @@ public class AppStoreTest {
         assertEquals(3,new org.json.JSONObject((String)f.memory.data.get("settings_v2")).getInt("version"));f.store.setIntervalMs(300);assertEquals("0.3",f.store.config().intervalText());
     }
     @Test public void monitorNoLongerNeedsSelectedSsid()throws Exception {Fixture f=new Fixture();String id=f.add("user","pass");f.store.selectAccount(id);f.store.setEnabled(true);assertTrue(f.store.configured());assertTrue(f.store.enabled());assertEquals("",f.store.ssid());}
+    @Test public void oldThreeFailurePauseMigratesWithoutLosingCredentialProtection()throws Exception{
+        Fixture f=new Fixture();String id=f.add("a","p");f.store.selectAccount(id);f.store.retry();f.store.rememberAuthError(f.store.config(),AuthError.PASSWORD);
+        f.memory.data.put("retry","{\"version\":2,\"blocked\":true,\"failures\":[1,2,3]}");
+        RetryPolicy migrated=f.store.retry();assertTrue(migrated.blocked);assertEquals(1,migrated.level);
+        assertTrue(migrated.remainingMillis(System.currentTimeMillis())<=15000);assertTrue(migrated.remainingMillis(System.currentTimeMillis())>0);
+        assertEquals(3,new org.json.JSONObject((String)f.memory.data.get("retry")).getInt("version"));
+        assertEquals(AuthError.PASSWORD,f.store.authError(f.store.config()));
+    }
+    @Test public void networkEventsAdvanceOneTrialWithoutResettingTheBackoff()throws Exception{
+        Fixture f=new Fixture();String id=f.add("a","p");f.store.selectAccount(id);long now=System.currentTimeMillis();
+        for(int i=0;i<3;i++)f.store.recordAuthFailure(f.store.config(),now+i);
+        f.store.expediteRetry();assertTrue(f.store.retry().canAttempt(System.currentTimeMillis()));
+        f.store.recordAuthFailure(f.store.config(),System.currentTimeMillis());assertEquals(2,f.store.retry().level);
+        f.store.expediteRetry();assertTrue(f.store.recheckDelay()>25000);assertEquals(2,f.store.retry().level);
+    }
 }
