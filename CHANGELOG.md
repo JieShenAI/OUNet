@@ -2,6 +2,13 @@
 
 Android 与 Windows 分别使用 `android-vX.Y.Z` 和 `windows-vX.Y.Z` 标签。
 
+## Windows 0.3.3（发布准备）
+
+- 后台检测期间可以添加、切换和编辑本机账号，账号、密码及备注不再丢失焦点或中断中文输入。
+- 仅在实际配置写入时锁定编辑器，保存、删除和认证仍使用原串行保护。
+- 包含 0.3.2 的按钮闪烁修复。
+- [发布说明](docs/WINDOWS_V0_3_3_RELEASE_NOTES.md) · [验证记录](docs/WINDOWS_V0_3_3_VERIFICATION.md)。
+
 ## Windows 0.3.2（发布准备）
 
 - 修复所有页面按钮在自动检测时反复变灰、切换文字及丢失焦点。

@@ -144,7 +144,8 @@ class Controller(QObject):
         policy_state = self.policy.state if self.policy else {}
         accounts = [dict(a, error=self.policy.credential_error(a["id"], a.get("revision", "legacy"))) for a in self.accounts] if self.policy else self.accounts
         return {"version":__version__,"authorEmail":AUTHOR_EMAIL,"projectUrl":PROJECT_URL,"releasesUrl":RELEASES_URL,"status":self.status,"title":titles.get(self.status,"连接概览"),"message":self.message,
-                "busy":self.busy,"reconnecting":self.busy and self.active_intent=="reconnect","configured":self.settings.configured,"monitor":self.settings.monitor,
+                "busy":self.busy,"configurationBusy":self.busy and self.configuration_operation,
+                "reconnecting":self.busy and self.active_intent=="reconnect","configured":self.settings.configured,"monitor":self.settings.monitor,
                 "blocked":self.blocked,"failures":self.failures,"legacyPause":policy_state.get("legacy_pause",False),
                 "pauseMessage":self._pause_message() if self.blocked else "", "lastFailureAt":policy_state.get("last_failure_at",""),
                 "lastRequestError":policy_state.get("last_error",""),"online":self.online is True,"onlineKnown":self.online is not None,

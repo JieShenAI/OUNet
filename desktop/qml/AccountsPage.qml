@@ -10,6 +10,8 @@ ColumnLayout {
     property bool adding: false
     property var pendingAction: null
     property bool savingToLeave: false
+    // Network polling never locks local drafts or interrupts keyboard/IME focus.
+    readonly property bool editingLocked: v.configurationBusy
     readonly property bool dirty: user.text!==initialUser || remark.text!==initialLabel || password.text!==""
     // QVariant account arrays are copied on each status notification. Only
     // replace delegates when their actual content changes, preserving focus.
@@ -33,7 +35,7 @@ ColumnLayout {
         }
     }
     spacing:18
-    RowLayout {Layout.fillWidth:true;AppText {text:"账号与密码仅保存在本机，使用当前 Windows 用户加密。";font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true} AppButton {text:"＋ 添加账号";primary:true;busy:page.v.busy;onTriggered:page.leave(()=>page.load(""))}}
+    RowLayout {Layout.fillWidth:true;AppText {text:"账号与密码仅保存在本机，使用当前 Windows 用户加密。";font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true} AppButton {text:"＋ 添加账号";primary:true;busy:page.editingLocked;onTriggered:page.leave(()=>page.load(""))}}
     GridLayout {
         Layout.fillWidth:true;columns:page.width>=720?2:1;columnSpacing:18;rowSpacing:18
         Panel {
@@ -45,7 +47,7 @@ ColumnLayout {
                 AppButton {
                     required property var modelData
                     objectName:"accountRow_"+modelData.id
-                    Layout.fillWidth:true;implicitHeight:88;padding:13;busy:page.v.busy
+                    Layout.fillWidth:true;implicitHeight:88;padding:13;busy:page.editingLocked
                     Accessible.name:(modelData.label||"校园网账号")+" "+modelData.username
                     background:Rectangle {radius:10;color:page.selectedId===modelData.id?Theme.selected:Theme.sub;border.width:parent.activeFocus?2:1;border.color:page.selectedId===modelData.id||parent.activeFocus?Theme.blue:Theme.border}
                     contentItem:ColumnLayout {
@@ -63,14 +65,14 @@ ColumnLayout {
             Layout.fillWidth:true;Layout.minimumWidth:0;Layout.alignment:Qt.AlignTop
             AppText {text:page.adding?"添加账号":"账号详情";font.pixelSize:16;font.bold:true}
             AppText {text:"备注";font.pixelSize:12;color:Theme.muted}
-            Field {id:remark;objectName:"accountLabel";Layout.fillWidth:true;maximumLength:80;enabled:!page.v.busy;Accessible.name:"账号备注"}
+            Field {id:remark;objectName:"accountLabel";Layout.fillWidth:true;maximumLength:80;enabled:!page.editingLocked;Accessible.name:"账号备注"}
             AppText {text:"校园网账号";font.pixelSize:12;color:Theme.muted}
-            Field {id:user;objectName:"accountUsername";Layout.fillWidth:true;maximumLength:128;enabled:!page.v.busy;Accessible.name:"校园网账号"}
+            Field {id:user;objectName:"accountUsername";Layout.fillWidth:true;maximumLength:128;enabled:!page.editingLocked;Accessible.name:"校园网账号"}
             AppText {text:page.adding?"密码":"密码 · 已加密保存";font.pixelSize:12;color:Theme.muted}
             RowLayout {
                 Layout.fillWidth:true
-                Field {id:password;objectName:"accountPassword";Layout.fillWidth:true;placeholderText:page.adding?"请输入密码":"********";maximumLength:512;echoMode:reveal.checked?TextInput.Normal:TextInput.Password;enabled:!page.v.busy;Accessible.name:"校园网密码"}
-                AppCheckBox {id:reveal;text:"显示";busy:page.v.busy;palette.windowText:Theme.ink;Accessible.name:"显示刚输入的密码"}
+                Field {id:password;objectName:"accountPassword";Layout.fillWidth:true;placeholderText:page.adding?"请输入密码":"********";maximumLength:512;echoMode:reveal.checked?TextInput.Normal:TextInput.Password;enabled:!page.editingLocked;Accessible.name:"校园网密码"}
+                AppCheckBox {id:reveal;text:"显示";busy:page.editingLocked;palette.windowText:Theme.ink;Accessible.name:"显示刚输入的密码"}
             }
             AppText {text:page.adding?"密码由 Windows 当前用户加密。":"密码不回填；留空保留该账号的原密码。";font.pixelSize:12;color:Theme.muted;Layout.fillWidth:true}
             AppCheckBox {id:ack;visible:!page.v.configured&&!page.v.legacyDirectory;text:"已停止原脚本 / 其他自动认证入口";palette.windowText:Theme.ink;Layout.fillWidth:true}

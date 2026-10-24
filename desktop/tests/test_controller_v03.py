@@ -72,6 +72,20 @@ class ControllerV03(TempTest):
         self.assertTrue(any(a['id']==self.second for a in self.controller.accounts))
         self.assertFalse(self.controller.settings.monitor)
 
+    def test_only_configuration_work_locks_account_editing(self):
+        # Block the worker deliberately so assertions observe a real in-flight task.
+        released=threading.Event()
+        try:
+            self.assertTrue(self.controller._submit(lambda progress:released.wait(2),lambda result:None))
+            self.assertTrue(self.controller.data['busy'])
+            self.assertFalse(self.controller.data['configurationBusy'])
+            released.set();self.wait();released.clear()
+            self.assertTrue(self.controller._submit(lambda progress:released.wait(2),lambda result:None,configuration=True))
+            self.assertTrue(self.controller.data['configurationBusy'])
+            released.set();self.wait()
+            self.assertFalse(self.controller.data['configurationBusy'])
+        finally:released.set()
+
     def test_same_password_and_rename_do_not_clear_credential_block(self):
         revision=self.controller.accounts[0]['revision']
         self.controller.policy.reject_credential(self.first,revision,'密码错误')

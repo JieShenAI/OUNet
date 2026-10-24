@@ -10,7 +10,7 @@ os.environ["QT_QUICK_BACKEND"]="software"
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT),str(ROOT.parent)]
 from PySide6.QtCore import QObject,QUrl,QCoreApplication,QEvent,QMetaObject,Q_ARG,Qt,QPointF
-from PySide6.QtGui import QFontDatabase
+from PySide6.QtGui import QFontDatabase,QInputMethodEvent
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuick import QQuickWindow
@@ -118,6 +118,36 @@ def main():
         assert find("accountUsername").property("text")=="demo_2026002"
         assert find("accountPassword").property("text")==""
         assert find("accountPassword").property("placeholderText")=="********"
+        # Real keyboard/IME input must survive the busy/idle footer transitions.
+        backend.active_intent='auto';backend.configuration_operation=False
+        backend.busy=True;backend.changed.emit();settle()
+        add=next(b for b in buttons() if b.property('text')=='＋ 添加账号')
+        add.forceActiveFocus();QTest.keyClick(window,Qt.Key.Key_Space);settle()
+        assert find('accountEditor').property('adding'),'Background check blocked adding an account'
+        for name,parts in (('accountUsername',('2026','00123')),('accountPassword',('SECRET','1234')),
+                           ('accountLabel',('WORK','DESK'))):
+            field=find(name);field.forceActiveFocus();settle()
+            expected=''
+            for busy,part in zip((True,False),parts):
+                backend.busy=busy;backend.changed.emit();QTest.qWait(20);settle()
+                assert field.property('enabled') and field.hasActiveFocus(),name+' lost edit focus'
+                for character in part:QTest.keyClick(window,ord(character.upper()))
+                expected+=part
+                assert field.property('text')==expected,name+' lost keyboard input'
+                assert field.property('cursorPosition')==len(expected),name+' cursor moved'
+            if name=='accountLabel':
+                composition=QInputMethodEvent('备注',[])
+                QCoreApplication.sendEvent(window,composition);settle()
+                backend.busy=True;backend.changed.emit();QTest.qWait(20);settle()
+                assert field.hasActiveFocus() and field.property('preeditText')=='备注','IME composition interrupted'
+                committed=QInputMethodEvent();committed.setCommitString('备注')
+                QCoreApplication.sendEvent(window,committed);settle()
+                assert field.property('text')==expected+'备注','IME commit lost'
+        backend.configuration_operation=True;backend.busy=True;backend.changed.emit();settle()
+        assert all(not find(name).property('enabled') for name in ('accountLabel','accountUsername','accountPassword')),'Account mutation must lock the editor'
+        backend.busy=False;backend.changed.emit();settle()
+        assert all(find(name).property('enabled') for name in ('accountLabel','accountUsername','accountPassword')),'Editor stayed locked after saving'
+        invoke(find('accountEditor'),'load','demo2')
         # Editing stays untouched while background status notifications refresh.
         find("accountLabel").setProperty("text","unsaved remark")
         backend.changed.emit();settle();assert find("accountLabel").property("text")=="unsaved remark"
@@ -172,7 +202,8 @@ def main():
             assert field.property('width')>100 and field.property('width')<width
         assert not warnings,'\n'.join(warnings)
         report={"accountSelectionDoesNotChangeOnlineIdentity":True,"passwordPlaceholderOnly":True,
-                "busyBlocksInputWithoutFlicker":True,"stableButtonsDuringAutomaticChecks":True,"accountDelegatesPreserved":True,"unsavedInputSurvivesRefresh":True,"fractionalSeconds":True,
+                "busyBlocksInputWithoutFlicker":True,"stableButtonsDuringAutomaticChecks":True,"accountDelegatesPreserved":True,"unsavedInputSurvivesRefresh":True,
+                "accountKeyboardInputSurvivesChecks":True,"accountImeSurvivesChecks":True,"accountMutationLocksEditor":True,"fractionalSeconds":True,
                 "pausePersists":True,"primaryTextContrast":True,"darkTheme":True,"deviceDrawer":True,
                 "latestLogsFirst":True,"widths":[1440,1200,1008,820,640],"qmlWarnings":warnings,
                 "realNetwork":False,"realUserData":False}
