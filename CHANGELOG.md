@@ -2,7 +2,7 @@
 
 Android 与 Windows 分别使用 `android-vX.Y.Z` 和 `windows-vX.Y.Z` 标签。
 
-## Windows 0.3.6（构建与扫描验证中）
+## Windows 0.3.6（已发布）
 
 - 保留 0.3.5 功能，使用独立官方 CPython 和官方摘要锁定的固定依赖重新构建。
 - 程序目录、Setup 和 ZIP 增加 Defender 扫描门槛及随包扫描报告，任一步失败时阻断发布。
