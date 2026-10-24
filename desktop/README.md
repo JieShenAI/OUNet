@@ -1,6 +1,6 @@
 # OUNet Windows Desktop
 
-版本 **0.3.6（构建与扫描验证中）** · Python / PySide6 / QML · Windows 10 1809+ / Windows 11 x64。
+版本 **[0.3.6（已发布）](https://github.com/JieShenAI/OUNet/releases/tag/windows-v0.3.6)** · Python / PySide6 / QML · Windows 10 1809+ / Windows 11 x64。
 
 [使用说明](../docs/WINDOWS.md) · [v0.3 设计规划](../docs/WINDOWS_DESKTOP_V0_3_DESIGN_PLAN.md) · [v0.3 实施与验证](../docs/WINDOWS_V0_3_VERIFICATION.md)
 
